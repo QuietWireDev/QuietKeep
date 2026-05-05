@@ -1,0 +1,80 @@
+# Changelog
+
+All notable changes to QuietKeep will be documented in this file.
+
+---
+
+## [1.0.0] - 2026-05-05
+
+### Added
+- **Diagnostics tab**. New fleet-wide Diagnostics page showing all hosts in a sortable table with OS, kernel version, uptime, reboot status, sudoers status, and last scan time. Columns are sortable by clicking headers. Includes a Scan All button for quick fleet-wide refresh
+- **Per-host Diagnostics card**. The Host Detail page now includes a Diagnostics section consolidating OS name, kernel version, uptime, reboot status, sudoers status, and last scan in a compact grid
+- **Real OS name detection**. Each scan now reads `PRETTY_NAME` from `/etc/os-release` via SSH, showing the actual distribution name and version (e.g. "Ubuntu 24.04.1 LTS", "Debian GNU/Linux 13 (trixie)", "CachyOS") instead of the generic package manager label
+- **Kernel version probing**. Each scan now runs `uname -r` via SSH and displays the running kernel version per host (e.g. "6.8.0-111-generic", "6.17.13-2-pve"). Useful for tracking kernel-specific CVEs across the fleet
+- **Host uptime display**. Every host row on Home shows how long it has been online (e.g. `up 3d 4h`), and the Host Detail page shows the same alongside the last-scan timestamp. Useful for spotting hosts that have gone too long between reboots or been stuck pending for a while
+- **Held-back updates surfacing**. When `apt-get upgrade` defers packages that would require installing new dependencies (typically kernel metapackages on Ubuntu/Debian), the Host Detail page now shows a dedicated card listing what was held back, with an explicit Install Held-Back Updates button that runs `apt-get upgrade --with-new-pkgs`. A Held Back column on the Host Management table shows the count per host so you can spot deferred updates at a glance
+- **Faster Docker stack scans**. Docker discovery and update checks across multiple hosts now run in parallel instead of sequentially
+- **Automated sudoers probing**. Every host scan now checks whether the `/etc/sudoers.d/quietkeep-<user>` NOPASSWD rule is present. Status is surfaced as an OK / Needs Fix / Unknown / Root badge in both Host Detail and Host Management
+- **One-click Fix Sudoers**. New modal installs the sudoers rule on a host using a one-time password, eliminating the need to SSH into each host by hand
+- **GPG key-rotation detection**. The patcher recognizes NO_PUBKEY / EXPKEYSIG / expired-key failures on apt and Kali hosts and tags the patch log so the UI can respond
+- **Keyring recovery modal**. When a key rotation is detected, the Host Detail view shows a persistent banner and an in-app popup with OS-specific secure recovery commands (HTTPS-fetched archive keyring, sha256 verification, dpkg install). No auto-trust of new signing keys by design
+- **`apt-get --fix-broken install` step**. The patcher now completes half-finished dpkg transactions before running the upgrade, fixing a common source of silent patch stalls on Kali rolling releases
+- **Shared ConfirmDialog component**. Centered, accessible confirmation modal with danger/warning/primary variants. Replaces native `window.confirm()` dialogs across Patch, Reboot, Docker Update, and Delete All Hosts
+- **Home overview page**. Default landing page with at-a-glance host and Docker status
+- **Docker stack management**. Discover, scan, and update Docker Compose stacks across hosts
+- **One-click Docker updates**. Pull latest images and recreate containers with full log capture
+- **Release notes links**. Auto-generated links to GitHub releases for container images
+- **Pre-flight system checks**. First-run wizard verifies Python, SSH keys, OS, and Docker
+- **System requirements FAQ**. Server specs, supported OS types, and Docker versioning in Help tab
+- **Bug reporting**. Report a Bug link in Help tab for easy issue submission
+- **Threat Intel dashboard**. CISA Known Exploited Vulnerabilities (KEV) catalog with vendor, threat actor, and time range filtering. Includes ransomware-linked CVE tracking
+- **Light/Dark/System themes**. Full theme support with persistent preference
+- **Settings page**. SSH config, scan intervals, auto-scan toggle, host management
+- **First-run wizard**. Guided setup for new installations
+- **Authentication**. Single-user admin login with username/password, JWT session cookies, and HTTP-only secure tokens
+- **Two-factor authentication**. Optional TOTP 2FA via authenticator app (Google Authenticator, Authy, 1Password, Bitwarden). QR code enrollment with manual text secret fallback
+- **Password reset**. Filesystem-based reset token for recovery without email or cloud dependencies
+- **SSH key generation**. One-click Ed25519 key generation in the first-run wizard with copy button
+- **Deploy Keys wizard step**. Deploy SSH keys to all hosts with a single password entry during first-run setup
+- **Scanning-in-progress banner**. Dashboard shows a green banner with spinner while scans are running
+- **Feature request links**. Report Bug and Request Feature links in the gear dropdown and Help page, linking to GitHub issue templates
+- **SSH key upload via web UI**. Paste your private key, public key is derived automatically
+- **Deploy SSH Key to Hosts**. Push the public key to managed hosts with one click using password auth
+- **Host setup script**. Downloadable script to automate SSH key and sudo configuration
+- **Docker Compose deployment**. Single compose file, builds from source, no manual config needed
+- **Auto-detect server IP**. Self-signed cert generated with correct SAN at startup, no env vars required
+- **Multi-OS support**. Debian/Ubuntu (apt), Kali Linux, Arch/CachyOS (pacman), Proxmox VE
+- **Patch management**. Scan, patch, track history, detect reboots
+- **Dashboard**. Clickable filter cards, progress banners, expandable log viewer
+- **30-day auto-cleanup**. Patch history older than 30 days is automatically removed
+- **Version display**. Settings > About shows the current QuietKeep version read from the VERSION file
+
+### Fixed
+- Reboot action now reports honest success/failure based on SSH session behavior and sudo exit codes instead of always returning success
+- Patch runs that fail because the host is missing a NOPASSWD sudoers rule no longer misreport as success with 0 packages; they now fail loudly and the UI surfaces the sudoers badge
+- `setup-host.sh` sudoers rule widened to cover `apt-get` and `pacman` commands (previously only `apt`), fixing silent patch failures on hosts that were set up with the earlier, narrower rule
+- Confirmation dialogs for Patch, Reboot, Docker Update, and Delete All Hosts now render in the center of the viewport instead of at the top where they were easy to miss (BUG-003)
+- SSH Test indicator in Host Management now reflects the persisted online state after the test completes instead of showing stale data
+- Docker scanner now preserves stack IDs across scans (upsert instead of delete/recreate)
+- Docker update history persists correctly after re-scans
+- Release notes links resolve correctly for monorepo images (Immich, Home Assistant, etc.)
+- SSH clipboard copy works on non-HTTPS connections (fallback method)
+- Light mode badge contrast improved for update indicators
+- SSH key path mismatch between Dockerfile ENV and upload destination
+- HomePage not refreshing host data after Scan All completes
+- Scanner concurrency no longer overwhelms SQLite with large fleets (18+ hosts). Added semaphore limiting to 3 concurrent scans for both system and Docker scanners
+- Auto-scan after first-run wizard now triggers both system and Docker scans
+- Auto-scan promise no longer lost on wizard component unmount
+- Docker update detection no longer flags locally-built images (no registry) as having updates available
+- SSL warning in first-run wizard restyled from subtle blue to prominent amber with Shield icon
+- Delete All Hosts modal now explicitly lists all data that will be removed (scan history, patch audit history, Docker stack data, Docker update logs)
+- Removed all em dashes from source code and documentation
+
+### Security
+- Bumped `python-jose` from 3.3.0 to 3.4.0 (CVE-2024-33663, CRITICAL: algorithm confusion with ECDSA keys)
+- Bumped `python-multipart` from 0.0.24 to 0.0.26 (CVE-2026-40347, MEDIUM)
+- Bumped `postcss` from 8.5.9 to 8.5.10 (CVE-2026-41305, MEDIUM)
+- All API routes (except health and auth) require valid JWT session
+- Passwords hashed with bcrypt via passlib
+- JWT secret auto-generated on first run, stored on persistent volume
+- Removed .semgrepignore exception file (false positive no longer exists)

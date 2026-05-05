@@ -1,0 +1,18 @@
+services:
+  quietkeep:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "80:8080"
+      - "443:8443"
+    volumes:
+      - quietkeep-data:/app/data
+      - quietkeep-certs:/app/certs
+      - quietkeep-ssh:/app/ssh
+
+volumes:
+  quietkeep-data:
+  quietkeep-certs:
+  quietkeep-ssh:

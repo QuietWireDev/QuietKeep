@@ -1,0 +1,7 @@
+hostname,ip_address,username,os_type,is_patch_target,has_docker
+web-server-01,192.168.1.10,admin,apt,true,false
+db-server-01,192.168.1.11,admin,apt,true,true
+proxmox-node-1,192.168.1.20,root,proxmox,true,false
+arch-desktop,192.168.1.30,user,pacman,true,false
+kali-box,192.168.1.40,user,kali,true,false
+monitor-only-host,192.168.1.50,admin,apt,false,false

@@ -1,0 +1,51 @@
+.git/
+.gitignore
+.semgrepignore
+
+# Python
+backend/.venv/
+backend/venv/
+backend/*.db
+backend/*.sqlite3
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Node
+frontend/node_modules/
+frontend/dist/
+frontend/build/
+
+# Environment and secrets
+.env
+.env.*
+*.pem
+id_*
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Dev-only deploy files
+deploy/setup-sudoers.sh
+deploy/systemd/
+deploy/nginx/quietkeep.conf
+
+# Docs
+*.md
+BUGS.md
+TODO.md
+CLAUDE_NOTES.md
+SECURITY_AUDIT_LOG.md
+PROJECT_REQUIREMENTS.md
+ARCHITECTURE.md
+
+# IDE
+.vscode/
+.idea/
+.claude/
+*.code-workspace
