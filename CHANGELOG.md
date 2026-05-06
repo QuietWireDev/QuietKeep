@@ -4,6 +4,17 @@ All notable changes to QuietKeep will be documented in this file.
 
 ---
 
+## [1.0.1] - 2026-05-06
+
+### Fixed
+- **First-Run Wizard reappearing on every login (BUG-005)**. The wizard dismissal state was stored only in React component state, which reset on every page load. Now a `wizard_completed` flag is persisted in the app_settings database table. Completing or skipping the wizard sets the flag server-side so it survives browser restarts and cookie clears.
+
+### Security
+- Sanitized error messages in API responses to prevent information exposure (CWE-209)
+- Restricted file permissions on server-side secrets
+
+---
+
 ## [1.0.0] - 2026-05-05
 
 ### Added

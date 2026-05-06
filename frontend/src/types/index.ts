@@ -85,6 +85,7 @@ export interface AppSettings {
   scan_interval_hours: number;
   docker_scan_interval_hours: number;
   auto_scan_enabled: boolean;
+  wizard_completed: boolean;
   app_version: string;
 }
 
@@ -95,6 +96,7 @@ export interface AppSettingsUpdate {
   scan_interval_hours?: number;
   docker_scan_interval_hours?: number;
   auto_scan_enabled?: boolean;
+  wizard_completed?: boolean;
 }
 
 export interface Package {

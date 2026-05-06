@@ -173,4 +173,5 @@ async def update_docker_stack(stack_id: int):
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Update failed: {e}")
+        logger.error(f"Docker stack update failed for stack {stack_id}: {e}")
+        raise HTTPException(status_code=500, detail="Update failed")

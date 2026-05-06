@@ -42,6 +42,7 @@ def _get_secret_key() -> str:
     secret = secrets.token_urlsafe(64)
     _SECRET_PATH.parent.mkdir(parents=True, exist_ok=True)
     _SECRET_PATH.write_text(secret)
+    _SECRET_PATH.chmod(0o600)
     logger.info("Generated new JWT secret")
     return secret
 

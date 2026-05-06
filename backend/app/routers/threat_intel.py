@@ -78,7 +78,7 @@ async def get_kev_catalog(
         catalog = await _fetch_kev()
     except Exception as e:
         logger.error("Failed to fetch CISA KEV: %s", e)
-        return {"error": str(e), "vulnerabilities": [], "total": 0, "catalog_version": None, "date_released": None}
+        return {"error": "Failed to fetch CISA KEV catalog", "vulnerabilities": [], "total": 0, "catalog_version": None, "date_released": None}
 
     vulns = list(catalog.get("vulnerabilities", []))
 
@@ -169,7 +169,7 @@ async def get_kev_summary():
         catalog = await _fetch_kev()
     except Exception as e:
         logger.error("Failed to fetch CISA KEV: %s", e)
-        return {"error": str(e)}
+        return {"error": "Failed to fetch CISA KEV catalog"}
 
     vulns = catalog.get("vulnerabilities", [])
 

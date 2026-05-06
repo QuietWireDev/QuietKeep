@@ -170,6 +170,20 @@ For a full walkthrough including Docker installation, firewall setup, and revers
 
 ---
 
+## Updating
+
+To update to a newer version:
+
+```bash
+cd ~/quietkeep
+git pull
+docker compose up -d --build
+```
+
+Your data, settings, SSH keys, and certificates are stored in named Docker volumes and are not affected by rebuilds. Check the [Releases](https://github.com/quietwire-dev/QuietKeep/releases) page or [CHANGELOG](CHANGELOG.md) for what changed in each version.
+
+---
+
 ## License
 
 QuietKeep is open source software licensed under the [GNU Affero General Public License v3.0](LICENSE).

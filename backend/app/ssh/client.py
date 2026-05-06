@@ -298,20 +298,20 @@ class SSHClient:
                     timeout=timeout * 4,
                 )
                 # If we get here, the session did not drop. The host did not
-                # reboot. Report the actual exit status and stderr to the UI.
+                # reboot. Log the real output server-side for diagnostics.
                 exit_status = result.exit_status if result.exit_status is not None else -1
                 detail = (result.stderr or result.stdout or "").strip()
                 if not detail:
                     detail = f"sudo reboot exited {exit_status} without rebooting"
                 logger.error(f"Reboot did not fire on {host}: exit={exit_status} detail={detail}")
-                return False, f"Reboot failed: {detail}"
+                return False, "Reboot failed; check sudoers configuration"
         except (asyncssh.ConnectionLost, asyncssh.ChannelOpenError):
             # Expected path on a real reboot: server tore the session down
             # mid-command before sending a clean exit.
             return True, "Reboot command sent"
         except asyncssh.Error as e:
             logger.error(f"SSH error rebooting {host}: {e}")
-            return False, f"SSH error: {e}"
+            return False, "SSH connection error"
         except asyncio.TimeoutError:
             # Ambiguous: could be a slow reboot or a stuck sudo prompt. Be
             # conservative and let the operator verify out of band.
@@ -319,7 +319,7 @@ class SSHClient:
             return False, "Reboot timed out; verify host state manually"
         except OSError as e:
             logger.error(f"OS error rebooting {host}: {e}")
-            return False, f"Network error: {e}"
+            return False, "Network error"
 
 
     async def probe_sudoers(
@@ -426,18 +426,18 @@ echo OK
                 if "incorrect password" in msg.lower() or "sudo:" in msg.lower() and "password" in msg.lower():
                     return False, "Incorrect password"
                 logger.error(f"install_sudoers on {host}: {msg}")
-                return False, f"Install failed: {msg}"
+                return False, "Sudoers install failed"
         except asyncssh.PermissionDenied:
             return False, "Authentication failed. Check the username and password"
         except asyncssh.Error as e:
             logger.error(f"SSH error installing sudoers on {host}: {e}")
-            return False, f"SSH error: {e}"
+            return False, "SSH connection error"
         except asyncio.TimeoutError:
             logger.error(f"SSH timeout installing sudoers on {host}")
             return False, "Connection timed out"
         except OSError as e:
             logger.error(f"OS error installing sudoers on {host}: {e}")
-            return False, f"Network error: {e}"
+            return False, "Network error"
 
 
 def _shell_quote(value: str) -> str:
@@ -508,7 +508,7 @@ async def deploy_public_key(
         return False, "Connection lost during deployment"
     except (asyncssh.Error, asyncio.TimeoutError) as e:
         logger.error(f"SSH key deployment error for {host}: {e}")
-        return False, f"Connection error: {e}"
+        return False, "Connection failed"
     except OSError as e:
         logger.error(f"OS error deploying key to {host}: {e}")
-        return False, f"Network error: {e}"
+        return False, "Network error"

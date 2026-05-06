@@ -41,6 +41,7 @@ DEFAULTS = {
     "scan_interval_hours": "6",
     "docker_scan_interval_hours": "6",
     "auto_scan_enabled": "true",
+    "wizard_completed": "false",
     "app_version": _read_version(),
 }
 
@@ -52,6 +53,7 @@ class SettingsResponse(BaseModel):
     scan_interval_hours: int
     docker_scan_interval_hours: int
     auto_scan_enabled: bool
+    wizard_completed: bool
     app_version: str
 
 
@@ -62,6 +64,7 @@ class SettingsUpdate(BaseModel):
     scan_interval_hours: int | None = None
     docker_scan_interval_hours: int | None = None
     auto_scan_enabled: bool | None = None
+    wizard_completed: bool | None = None
 
 
 async def get_all_settings(db: AsyncSession) -> dict[str, str]:
@@ -80,6 +83,7 @@ def settings_to_response(raw: dict[str, str]) -> SettingsResponse:
         scan_interval_hours=int(raw["scan_interval_hours"]),
         docker_scan_interval_hours=int(raw["docker_scan_interval_hours"]),
         auto_scan_enabled=raw["auto_scan_enabled"].lower() in ("true", "1", "yes"),
+        wizard_completed=raw["wizard_completed"].lower() in ("true", "1", "yes"),
         app_version=raw["app_version"],
     )
 
@@ -179,7 +183,7 @@ def _resolve_public_key(key_path: Path) -> str:
         return pub_path.read_text().strip()
 
     if not key_path.exists():
-        raise FileNotFoundError(f"Private key not found: {key_path}")
+        raise FileNotFoundError("SSH private key not found")
 
     key = asyncssh.read_private_key(str(key_path))
     return key.export_public_key("openssh").decode().strip()

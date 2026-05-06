@@ -279,13 +279,14 @@ async def test_host_connection(host_id: int, db: AsyncSession = Depends(get_db))
             "sudoers_ok": sudoers_ok,
         }
     except Exception as e:
+        logger.error(f"Connection test failed for {host.hostname}: {e}")
         host.is_online = False
         host.last_scan = now
         await db.commit()
         return {
             "success": False,
             "hostname": host.hostname,
-            "message": str(e),
+            "message": "SSH connection failed",
             "is_online": False,
             "sudoers_ok": host.sudoers_ok,
         }

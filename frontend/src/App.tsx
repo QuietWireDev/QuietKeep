@@ -15,7 +15,7 @@ import ThreatIntel from './components/ThreatIntel'
 import DiagnosticsPage from './components/DiagnosticsPage'
 import FirstRunWizard from './components/FirstRunWizard'
 import LoginPage from './components/LoginPage'
-import { useHosts, useSettings, triggerScanAll, triggerDockerScanAll } from './hooks/useApi'
+import { useHosts, useSettings, updateSettings, triggerScanAll, triggerDockerScanAll } from './hooks/useApi'
 import { useAuth } from './hooks/useAuth'
 import { useThemeListener } from './hooks/useTheme'
 
@@ -25,7 +25,7 @@ function App() {
   const [activeTab, setActiveTab] = useState<Tab>('home');
   const [settingsSection, setSettingsSection] = useState<string | undefined>();
   const auth = useAuth();
-  const { hosts, loading, refresh } = useHosts();
+  const { loading, refresh } = useHosts();
   const { settings } = useSettings();
   const [wizardDismissed, setWizardDismissed] = useState(false);
 
@@ -51,8 +51,10 @@ function App() {
     );
   }
 
-  // Authenticated but no hosts: show first-run wizard
-  if (!loading && hosts.length === 0 && !wizardDismissed) {
+  // Show first-run wizard if it hasn't been completed yet. The flag is
+  // persisted server-side in app_settings so it survives browser restarts
+  // and cookie clears. (BUG-005 fix)
+  if (!loading && settings && !settings.wizard_completed && !wizardDismissed) {
     return (
       <FirstRunWizard
         onComplete={(destination?: string, sshReady?: boolean) => {
@@ -60,6 +62,8 @@ function App() {
             setActiveTab('settings');
             setSettingsSection('ssh');
           }
+          // Persist wizard_completed flag server-side before any re-render.
+          updateSettings({ wizard_completed: true }).catch(() => {});
           // Fire scan before state update. setWizardDismissed triggers
           // a re-render that unmounts the wizard, so any .then() chained
           // after it would be lost.
