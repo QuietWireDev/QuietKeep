@@ -156,7 +156,7 @@ async def scan_docker_host(host_id: int):
     """Scan a single host for Docker stacks and updates."""
     result = await scan_docker_host_by_id(host_id)
     if "error" in result:
-        raise HTTPException(status_code=404, detail=result["error"])
+        raise HTTPException(status_code=404, detail="Host not found")
     return result
 
 
