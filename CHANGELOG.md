@@ -4,6 +4,13 @@ All notable changes to QuietKeep will be documented in this file.
 
 ---
 
+## [1.0.2] - 2026-05-08
+
+### Security
+- Bumped `python-multipart` from 0.0.26 to 0.0.27 (CVE-2026-40347, denial of service via crafted multipart/form-data requests)
+
+---
+
 ## [1.0.1] - 2026-05-06
 
 ### Fixed
