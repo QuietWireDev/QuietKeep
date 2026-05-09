@@ -51,14 +51,21 @@ class SSHClient:
             return False
 
         async def run(self, command: str, timeout: Optional[int] = None) -> tuple[bool, str, str]:
-            """Run a command on this open connection."""
+            """Run a command on this open connection.
+
+            Returns (success, stdout, stderr) where `success` is True only when
+            the SSH session completes AND the remote command exits with status 0.
+            A non-zero exit code (e.g. from a failed `docker compose up`) returns
+            success=False so callers do not mistake a failed command for a
+            working one (BUG-006).
+            """
             timeout = timeout or self._timeout * 4
             try:
                 result = await asyncio.wait_for(
                     self._conn.run(command, check=False),
                     timeout=timeout,
                 )
-                return True, result.stdout or "", result.stderr or ""
+                return result.exit_status == 0, result.stdout or "", result.stderr or ""
             except asyncio.TimeoutError:
                 return False, "", "Command timed out"
             except asyncssh.Error as e:
@@ -78,8 +85,11 @@ class SSHClient:
         """
         Execute a command on a remote host via SSH.
 
-        Returns:
-            (success, stdout, stderr)
+        Returns (success, stdout, stderr) where `success` is True only when
+        the SSH session completes AND the remote command exits with status 0.
+        A non-zero exit code (e.g. from a failed `docker compose up`) returns
+        success=False so callers do not mistake a failed command for a
+        working one (BUG-006).
         """
         timeout = timeout or self.timeout
         try:
@@ -97,7 +107,7 @@ class SSHClient:
                     conn.run(command, check=False),
                     timeout=timeout * 4,
                 )
-                return True, result.stdout or "", result.stderr or ""
+                return result.exit_status == 0, result.stdout or "", result.stderr or ""
         except asyncssh.Error as e:
             logger.error(f"SSH error connecting to {host}: {e}")
             return False, "", str(e)

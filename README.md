@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://img.shields.io/badge/version-1.0.2-brightgreen" alt="Version: 1.0.2" />
+  <img src="https://img.shields.io/badge/version-1.0.3-brightgreen" alt="Version: 1.0.3" />
   <img src="https://img.shields.io/badge/license-AGPL--3.0-green" alt="License: AGPL-3.0" />
   <img src="https://img.shields.io/badge/python-3.12-blue" alt="Python 3.12" />
   <img src="https://img.shields.io/badge/react-18-61dafb" alt="React 18" />
@@ -103,6 +103,7 @@ QuietKeep v1.0.0 is the first public release. All core features are functional a
 - ✅ Password reset via filesystem token (no email or cloud required)
 
 ### Planned
+- 📋 Disk space monitoring with color-coded thresholds in Diagnostics (helps predict update failures)
 - 📋 Email/webhook notifications for available updates
 - 📋 Selective patching (choose which packages to update)
 - 📋 Host groups and bulk operations

@@ -4,6 +4,13 @@ All notable changes to QuietKeep will be documented in this file.
 
 ---
 
+## [1.0.3] - 2026-05-09
+
+### Fixed
+- **Docker stack update reporting false success (BUG-006)**. The SSH client's `run_command` returned `success=True` whenever the SSH session completed, ignoring the remote command's exit status. This caused failed Docker stack updates (e.g. "no space left on device") to be recorded as successful in the update history. The success flag now reflects the remote command's exit code, so failures are correctly reported with a red badge in the UI.
+
+---
+
 ## [1.0.2] - 2026-05-08
 
 ### Security
