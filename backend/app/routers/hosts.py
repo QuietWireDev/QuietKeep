@@ -29,7 +29,9 @@ VALID_OS_TYPES = {"apt", "pacman", "proxmox", "kali"}
 @router.get("", response_model=list[HostResponse])
 async def list_hosts(db: AsyncSession = Depends(get_db)):
     """List all hosts with their current status."""
-    result = await db.execute(select(HostModel).order_by(HostModel.hostname))
+    result = await db.execute(
+        select(HostModel).options(selectinload(HostModel.tags)).order_by(HostModel.hostname)
+    )
     hosts = result.scalars().all()
     return hosts
 
@@ -78,7 +80,7 @@ async def get_host(host_id: int, db: AsyncSession = Depends(get_db)):
     """Get a single host with its pending packages."""
     result = await db.execute(
         select(HostModel)
-        .options(selectinload(HostModel.packages))
+        .options(selectinload(HostModel.packages), selectinload(HostModel.tags))
         .where(HostModel.id == host_id)
     )
     host = result.scalar_one_or_none()

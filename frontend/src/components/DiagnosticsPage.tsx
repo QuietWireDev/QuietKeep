@@ -11,7 +11,7 @@ import { useHosts, triggerScanAll } from '../hooks/useApi';
 import { formatUTC, formatUptime } from '../utils/formatDate';
 import type { Host } from '../types';
 
-type SortKey = 'hostname' | 'os' | 'kernel' | 'uptime' | 'reboot' | 'sudoers' | 'last_scan';
+type SortKey = 'hostname' | 'os' | 'kernel' | 'disk' | 'uptime' | 'reboot' | 'sudoers' | 'last_scan';
 type SortDir = 'asc' | 'desc';
 
 // Fallback OS label when os_pretty_name has not been probed yet.
@@ -26,12 +26,21 @@ function osLabel(host: Host): string {
   }
 }
 
+// Color class for disk usage percentage.
+function diskColor(pct: number | null): string {
+  if (pct === null) return 'text-gray-600';
+  if (pct >= 90) return 'text-red-400';
+  if (pct >= 70) return 'text-amber-400';
+  return 'text-emerald-400';
+}
+
 // Sort comparator value for a given key.
 function sortValue(host: Host, key: SortKey): string | number {
   switch (key) {
     case 'hostname': return host.hostname.toLowerCase();
     case 'os': return osLabel(host).toLowerCase();
     case 'kernel': return (host.kernel_version ?? '').toLowerCase();
+    case 'disk': return host.disk_usage_percent ?? -1;
     case 'uptime': return host.last_boot_at ? new Date(host.last_boot_at).getTime() : 0;
     case 'reboot': return host.reboot_required ? 1 : 0;
     case 'sudoers': return host.sudoers_ok === true ? 0 : host.sudoers_ok === false ? 2 : 1;
@@ -131,6 +140,9 @@ export default function DiagnosticsPage() {
                   <th className={thClass} onClick={() => toggleSort('kernel')}>
                     Kernel <SortIcon col="kernel" />
                   </th>
+                  <th className={thClass} onClick={() => toggleSort('disk')}>
+                    Disk <SortIcon col="disk" />
+                  </th>
                   <th className={thClass} onClick={() => toggleSort('uptime')}>
                     Uptime <SortIcon col="uptime" />
                   </th>
@@ -165,6 +177,10 @@ export default function DiagnosticsPage() {
                     {/* Kernel */}
                     <td className="py-2.5 text-xs font-mono text-gray-400">
                       {host.kernel_version || <span className="text-gray-600">-</span>}
+                    </td>
+                    {/* Disk */}
+                    <td className={`py-2.5 text-xs font-mono ${diskColor(host.disk_usage_percent)}`}>
+                      {host.disk_usage_percent !== null ? `${host.disk_usage_percent}%` : <span className="text-gray-600">-</span>}
                     </td>
                     {/* Uptime */}
                     <td className="py-2.5 text-xs font-mono text-gray-400">

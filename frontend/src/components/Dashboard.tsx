@@ -4,10 +4,12 @@
 // Hosts are sorted by severity: reboot → updates → current → offline.
 // Author: QuietWire (Dennis Ayotte)
 
-import { useState, useMemo } from 'react';
-import { RefreshCw, Loader2, RotateCw, Package, Monitor, AlertTriangle } from 'lucide-react';
+import { useState, useMemo, useEffect } from 'react';
+import { RefreshCw, Loader2, RotateCw, Package, Monitor, AlertTriangle, Download, Play, CheckCircle, XCircle, AlertOctagon } from 'lucide-react';
 import type { Host } from '../types';
-import { useDashboard, useHosts, triggerScanAll } from '../hooks/useApi';
+import { useDashboard, useHosts, useTags, triggerScanAll, triggerPatchAll } from '../hooks/useApi';
+import type { BulkPatchResult } from '../hooks/useApi';
+import ConfirmDialog from './ConfirmDialog';
 import { formatUTC } from '../utils/formatDate';
 import HostDetail from './HostDetail';
 
@@ -30,13 +32,43 @@ const statusStyles = {
   offline: { color: 'bg-gray-600', text: 'text-gray-500' },
 };
 
-export default function Dashboard() {
+interface DashboardProps {
+  initialFilter?: string;
+  onFilterConsumed?: () => void;
+}
+
+export default function Dashboard({ initialFilter, onFilterConsumed }: DashboardProps = {}) {
   const { data: summary, loading: summaryLoading, refresh: refreshSummary } = useDashboard();
   const { hosts, loading: hostsLoading, refresh: refreshHosts } = useHosts();
   const [selectedHost, setSelectedHost] = useState<Host | null>(null);
   const [scanning, setScanning] = useState(false);
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
+  const [patching, setPatching] = useState(false);
+  const [showPatchConfirm, setShowPatchConfirm] = useState(false);
+  const [patchResults, setPatchResults] = useState<BulkPatchResult[] | null>(null);
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>(() => {
+    if (initialFilter && !initialFilter.startsWith('tag:')) return (initialFilter as StatusFilter);
+    return 'all';
+  });
   const [osFilter, setOsFilter] = useState<string>('all');
+  const [tagFilter, setTagFilter] = useState<number | 'all'>(() => {
+    if (initialFilter?.startsWith('tag:')) return parseInt(initialFilter.slice(4), 10);
+    return 'all';
+  });
+  const { tags } = useTags();
+
+  // Consume the initial filter so it doesn't persist on subsequent tab switches
+  useEffect(() => {
+    if (initialFilter) {
+      if (initialFilter.startsWith('tag:')) {
+        setTagFilter(parseInt(initialFilter.slice(4), 10));
+        setStatusFilter('all');
+      } else {
+        setStatusFilter((initialFilter as StatusFilter) || 'all');
+        setTagFilter('all');
+      }
+      onFilterConsumed?.();
+    }
+  }, [initialFilter]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const loading = summaryLoading || hostsLoading;
 
@@ -56,12 +88,13 @@ export default function Dashboard() {
     else if (statusFilter === 'updates') result = result.filter(h => h.pending_updates > 0);
     else if (statusFilter === 'reboot') result = result.filter(h => h.reboot_required);
     if (osFilter !== 'all') result = result.filter(h => h.os_type === osFilter);
+    if (tagFilter !== 'all') result = result.filter(h => h.tags?.some(t => t.id === tagFilter));
     // Sort by severity: reboot → updates → current → offline
     return [...result].sort((a, b) => {
       const order = { reboot: 0, updates: 1, current: 2, offline: 3 };
       return order[hostStatusKey(a)] - order[hostStatusKey(b)];
     });
-  }, [hosts, statusFilter, osFilter]);
+  }, [hosts, statusFilter, osFilter, tagFilter]);
 
   const handleScanAll = async () => {
     setScanning(true);
@@ -71,6 +104,22 @@ export default function Dashboard() {
       await refreshHosts();
     } finally {
       setScanning(false);
+    }
+  };
+
+  const handlePatchAll = async () => {
+    setShowPatchConfirm(false);
+    setPatching(true);
+    setPatchResults(null);
+    try {
+      const response = await triggerPatchAll();
+      setPatchResults(response.results);
+      await refreshSummary();
+      await refreshHosts();
+    } catch {
+      setPatchResults([{ host_id: 0, hostname: 'unknown', status: 'error', packages_updated: 0, error: 'Bulk patch request failed' }]);
+    } finally {
+      setPatching(false);
     }
   };
 
@@ -97,14 +146,33 @@ export default function Dashboard() {
             <p className="text-xs text-gray-500 mt-1">Last scan: {formatUTC(summary.last_scan)}</p>
           )}
         </div>
-        <button
-          onClick={handleScanAll}
-          disabled={scanning}
-          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 transition-colors font-medium text-sm"
-        >
-          {scanning ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
-          {scanning ? 'Scanning...' : 'Scan All Hosts'}
-        </button>
+        <div className="flex items-center gap-2">
+          <a
+            href="/api/history/export/xlsx"
+            download
+            className="flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-700 hover:border-gray-600 hover:bg-gray-800 transition-colors text-sm text-gray-400 hover:text-white"
+            title="Export all patch history as Excel (one sheet per host)"
+          >
+            <Download className="h-4 w-4" />
+            Export
+          </a>
+          <button
+            onClick={() => setShowPatchConfirm(true)}
+            disabled={patching || scanning || !summary?.hosts_with_updates}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-amber-600 hover:bg-amber-500 disabled:opacity-50 transition-colors font-medium text-sm"
+          >
+            {patching ? <Loader2 className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4" />}
+            {patching ? 'Patching...' : 'Patch All'}
+          </button>
+          <button
+            onClick={handleScanAll}
+            disabled={scanning || patching}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 transition-colors font-medium text-sm"
+          >
+            {scanning ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+            {scanning ? 'Scanning...' : 'Scan All Hosts'}
+          </button>
+        </div>
       </div>
 
       {/* Metric tiles */}
@@ -179,7 +247,7 @@ export default function Dashboard() {
                 osFilter === 'all' ? 'bg-gray-700 text-white' : 'text-gray-500 hover:text-gray-300 hover:bg-gray-800'
               }`}
             >
-              All Hosts
+              All Hosts <span className="ml-1 text-[10px] opacity-60">{hosts.length}</span>
             </button>
             {osTypes.map(t => (
               <button
@@ -189,18 +257,62 @@ export default function Dashboard() {
                   osFilter === t ? 'bg-gray-700 text-white' : 'text-gray-500 hover:text-gray-300 hover:bg-gray-800'
                 }`}
               >
-                {osLabel(t)}
+                {osLabel(t)} <span className="ml-0.5 text-[10px] opacity-60">{hosts.filter(h => h.os_type === t).length}</span>
               </button>
             ))}
-            {(statusFilter !== 'all' || osFilter !== 'all') && (
+            {tags.length > 0 && (
+              <span className="mx-1 text-gray-700">|</span>
+            )}
+            {tags.map(tag => (
               <button
-                onClick={() => { setStatusFilter('all'); setOsFilter('all'); }}
+                key={tag.id}
+                onClick={() => setTagFilter(tagFilter === tag.id ? 'all' : tag.id)}
+                className={`flex items-center gap-1 px-2 py-1 rounded text-[11px] font-medium transition-colors ${
+                  tagFilter === tag.id ? 'bg-gray-700 text-white' : 'text-gray-500 hover:text-gray-300 hover:bg-gray-800'
+                }`}
+              >
+                <span className="w-2 h-2 rounded-full" style={{ backgroundColor: tag.color }} />
+                {tag.name} <span className="text-[10px] opacity-60">{hosts.filter(h => h.tags?.some(t => t.id === tag.id)).length}</span>
+              </button>
+            ))}
+            {(statusFilter !== 'all' || osFilter !== 'all' || tagFilter !== 'all') && (
+              <button
+                onClick={() => { setStatusFilter('all'); setOsFilter('all'); setTagFilter('all'); }}
                 className="ml-auto text-[10px] text-gray-600 hover:text-gray-400 transition-colors"
               >
                 Clear filters
               </button>
             )}
           </div>
+
+          {/* Active filter indicator */}
+          {(statusFilter !== 'all' || osFilter !== 'all' || tagFilter !== 'all') && (
+            <div className="px-4 py-2 bg-gray-800/30 flex items-center gap-2 text-[11px] text-gray-400">
+              <span>Showing</span>
+              {statusFilter !== 'all' && (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-gray-700 text-gray-200">
+                  {statusFilter === 'online' ? 'Online' : statusFilter === 'updates' ? 'Need updates' : 'Need reboot'}
+                  <button onClick={() => setStatusFilter('all')} className="ml-0.5 hover:text-white">×</button>
+                </span>
+              )}
+              {osFilter !== 'all' && (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-gray-700 text-gray-200">
+                  {osLabel(osFilter)}
+                  <button onClick={() => setOsFilter('all')} className="ml-0.5 hover:text-white">×</button>
+                </span>
+              )}
+              {tagFilter !== 'all' && (() => {
+                const tag = tags.find(t => t.id === tagFilter);
+                return tag ? (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-white" style={{ backgroundColor: tag.color }}>
+                    {tag.name}
+                    <button onClick={() => setTagFilter('all')} className="ml-0.5 hover:text-white/80">×</button>
+                  </span>
+                ) : null;
+              })()}
+              <span className="text-gray-500">- {filteredHosts.length} host{filteredHosts.length !== 1 ? 's' : ''}</span>
+            </div>
+          )}
 
           {/* Host rows */}
           <div className="divide-y divide-gray-800/50">
@@ -220,6 +332,13 @@ export default function Dashboard() {
                     <span className="text-sm font-medium w-36 truncate group-hover:text-white transition-colors">
                       {host.hostname}
                     </span>
+                    {host.tags && host.tags.length > 0 && (
+                      <div className="flex items-center gap-0.5">
+                        {host.tags.map(t => (
+                          <span key={t.id} className="w-2 h-2 rounded-full" style={{ backgroundColor: t.color }} title={t.name} />
+                        ))}
+                      </div>
+                    )}
                     <span className="text-xs text-gray-500 w-28 font-mono">{host.ip_address}</span>
                     <span className="text-[10px] px-2 py-0.5 rounded bg-gray-800 text-gray-400 border border-gray-700">
                       {osLabel(host.os_type)}
@@ -257,6 +376,71 @@ export default function Dashboard() {
           </div>
         </div>
       )}
+
+      {/* Bulk patch results banner */}
+      {patchResults && (
+        <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
+          <div className="flex items-center justify-between px-5 py-3 border-b border-gray-800">
+            <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+              Bulk Patch Results
+            </span>
+            <button
+              onClick={() => setPatchResults(null)}
+              className="text-[10px] text-gray-600 hover:text-gray-400 transition-colors"
+            >
+              Dismiss
+            </button>
+          </div>
+          <div className="divide-y divide-gray-800/50">
+            {patchResults.map((r) => (
+              <div key={r.host_id} className="flex items-center gap-3 px-5 py-2.5 text-sm">
+                {r.status === 'success' ? (
+                  <CheckCircle className="h-4 w-4 text-emerald-400 shrink-0" />
+                ) : r.status === 'failed' || r.status === 'error' ? (
+                  <XCircle className="h-4 w-4 text-red-400 shrink-0" />
+                ) : (
+                  <AlertOctagon className="h-4 w-4 text-amber-400 shrink-0" />
+                )}
+                <span className="font-medium w-36 truncate">{r.hostname}</span>
+                <span className={`text-xs px-2 py-0.5 rounded ${
+                  r.status === 'success' ? 'bg-emerald-500/10 text-emerald-400'
+                    : r.status === 'failed' || r.status === 'error' ? 'bg-red-500/10 text-red-400'
+                    : 'bg-amber-500/10 text-amber-400'
+                }`}>
+                  {r.status}
+                </span>
+                <span className="text-xs text-gray-500">
+                  {r.packages_updated} pkg{r.packages_updated !== 1 ? 's' : ''} updated
+                </span>
+                {r.error && (
+                  <span className="text-xs text-red-400/70 ml-auto truncate max-w-xs">{r.error}</span>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Patch All confirmation dialog */}
+      <ConfirmDialog
+        open={showPatchConfirm}
+        title="Patch All Hosts"
+        message={
+          <>
+            This will apply <strong>standard upgrades</strong> to all online patch-eligible hosts.
+            Kernel upgrades are <strong>excluded</strong> - those remain per-host opt-in only.
+            <br /><br />
+            <span className="text-gray-500 text-xs">
+              {summary ? `${summary.hosts_online} host${summary.hosts_online !== 1 ? 's' : ''} online, ${summary.hosts_with_updates} with pending updates` : 'Loading...'}
+            </span>
+          </>
+        }
+        confirmLabel="Patch All"
+        variant="warning"
+        loading={patching}
+        onConfirm={handlePatchAll}
+        onCancel={() => setShowPatchConfirm(false)}
+      />
     </div>
   );
 }

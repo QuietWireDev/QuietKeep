@@ -132,6 +132,7 @@ async def _scan_host_impl(host_id: int, hostname: str, ip_address: str, username
             last_boot = await ssh_client.get_last_boot_on(conn)
             kernel_ver = await ssh_client.get_kernel_version_on(conn)
             os_name = await ssh_client.get_os_pretty_name_on(conn)
+            disk_pct = await ssh_client.get_disk_usage_on(conn)
 
     except (asyncssh.Error, asyncio.TimeoutError, OSError) as e:
         logger.warning(f"  {hostname}: offline ({e})")
@@ -173,6 +174,8 @@ async def _scan_host_impl(host_id: int, hostname: str, ip_address: str, username
             host.kernel_version = kernel_ver
         if os_name is not None:
             host.os_pretty_name = os_name
+        if disk_pct is not None:
+            host.disk_usage_percent = disk_pct
         await db.commit()
 
     logger.info(f"  {hostname}: {len(packages)} updates available, reboot={'YES' if reboot_needed else 'no'}")

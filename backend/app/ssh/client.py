@@ -216,6 +216,24 @@ class SSHClient:
             return value.strip('"').strip("'") or None
         return None
 
+    async def get_disk_usage_on(self, conn: "SSHClient._Connection") -> Optional[int]:
+        """Get root filesystem usage percentage on an open connection.
+
+        Runs `df /` and parses the Use% column. Returns an integer 0-100,
+        or None if the probe fails or output is unparseable.
+        """
+        success, stdout, _ = await conn.run(
+            "df / --output=pcent 2>/dev/null | tail -1",
+            timeout=10,
+        )
+        if not success:
+            return None
+        try:
+            # Output looks like "  42%" – strip whitespace and percent sign
+            return int(stdout.strip().rstrip('%'))
+        except (ValueError, AttributeError):
+            return None
+
     async def get_last_boot_at(self, host: str, username: str) -> Optional[datetime]:
         """Compute the host's last boot time as a UTC datetime.
 

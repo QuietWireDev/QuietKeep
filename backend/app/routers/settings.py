@@ -43,6 +43,7 @@ DEFAULTS = {
     "auto_scan_enabled": "true",
     "wizard_completed": "false",
     "app_version": _read_version(),
+    "build_tag": app_config.build_tag,
 }
 
 
@@ -55,6 +56,7 @@ class SettingsResponse(BaseModel):
     auto_scan_enabled: bool
     wizard_completed: bool
     app_version: str
+    build_tag: str
 
 
 class SettingsUpdate(BaseModel):
@@ -85,6 +87,7 @@ def settings_to_response(raw: dict[str, str]) -> SettingsResponse:
         auto_scan_enabled=raw["auto_scan_enabled"].lower() in ("true", "1", "yes"),
         wizard_completed=raw["wizard_completed"].lower() in ("true", "1", "yes"),
         app_version=raw["app_version"],
+        build_tag=raw.get("build_tag", ""),
     )
 
 

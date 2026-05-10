@@ -16,6 +16,7 @@ class Settings(BaseSettings):
     scan_interval_hours: int = 6
     self_hostname: str = "quietkeep"  # Used to prevent QuietKeep from patching itself
     quietkeep_host: str = "localhost"  # Overridden at container startup with actual IP
+    build_tag: str = ""  # Set to "TEST", "BETA", etc. to show a badge in the UI. Empty = production.
 
     class Config:
         env_file = ".env"

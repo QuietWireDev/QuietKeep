@@ -14,7 +14,7 @@ from app.auth import get_current_user
 from app.config import settings as app_settings
 from app.database import async_session, init_db
 from app.models import HostModel
-from app.routers import auth, dashboard, docker, hosts, patches, settings as settings_router, threat_intel
+from app.routers import activity, auth, dashboard, docker, hosts, patches, settings as settings_router, tags, threat_intel
 from app.services.scheduler import start_scheduler, stop_scheduler
 
 logging.basicConfig(
@@ -86,6 +86,8 @@ app.include_router(dashboard.router, dependencies=[Depends(get_current_user)])
 app.include_router(docker.router, dependencies=[Depends(get_current_user)])
 app.include_router(settings_router.router, dependencies=[Depends(get_current_user)])
 app.include_router(threat_intel.router, dependencies=[Depends(get_current_user)])
+app.include_router(tags.router, dependencies=[Depends(get_current_user)])
+app.include_router(activity.router, dependencies=[Depends(get_current_user)])
 
 
 @app.get("/api/health")

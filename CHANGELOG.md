@@ -4,6 +4,24 @@ All notable changes to QuietKeep will be documented in this file.
 
 ---
 
+## [1.1.0] - 2026-05-10
+
+### Added
+- **Host tags/groups**. Organize hosts by role, location, or environment with colored tags. Many-to-many relationship via junction table. Full CRUD API and management UI in Settings with 10 preset colors. Tags display as colored dots on host rows (Home and Dashboard), filter by tag on Dashboard, assign/remove tags per host from Host Detail. Tags card on Home sidebar links directly to filtered Dashboard view.
+- **Bulk patch all hosts**. One-click Patch All button on Dashboard patches every host with pending updates. Per-host results banner surfaces errors individually. Automatic re-scan after completion. Confirmation dialog prevents accidental triggers.
+- **Recent activity feed**. Home page timeline of scans, patches, reboots, and Docker updates. Color-coded icons by event type. Relative timestamps ("2 min ago") with absolute on hover. Auto-refreshes after scan/patch operations.
+- **Patch history export**. Fleet-wide Excel export (.xlsx with one sheet per host, one row per package) and per-host CSV download. Export button on Dashboard header.
+- **Disk usage monitoring**. Color-coded disk usage column in Diagnostics table (green < 70%, amber 70-90%, red > 90%). Collected during each host scan via `df -h /`.
+- **Build tag badge**. Optional TEST/BETA/PROD label in the nav bar via BUILD_TAG environment variable. Useful for distinguishing test and production instances.
+- **Clickable metric tiles**. Home page cards (Hosts, Packages, Docker, Attention) navigate to the relevant page with appropriate pre-filter applied.
+- **UI polish**. Host count badges on OS and tag filter tabs. Active filter indicator bar with dismissible chips and match count on Dashboard. Relative timestamps via new `timeAgo()` utility.
+- **User Guide link**. Accessible from Settings > About and Help & FAQ page, linking to the full User Guide on GitHub.
+
+### Fixed
+- `fetchJson` now handles HTTP 204 No Content responses (tag assign/remove endpoints returned empty body, causing silent JSON parse failures)
+
+---
+
 ## [1.0.3] - 2026-05-09
 
 ### Fixed

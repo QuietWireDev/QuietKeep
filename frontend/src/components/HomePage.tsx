@@ -4,14 +4,14 @@
 // "Scan All" triggers both system and Docker scans in parallel.
 // Author: QuietWire (Dennis Ayotte)
 
-import { Monitor, Package, Container, ArrowRight, RefreshCw, Loader2, RotateCw } from 'lucide-react';
-import { useDashboard, useDockerDashboard, useHosts, triggerScanAll, triggerDockerScanAll, isScanRunning, getActiveScanPromise } from '../hooks/useApi';
-import { formatUTC, formatUptime } from '../utils/formatDate';
+import { Monitor, Package, Container, ArrowRight, RefreshCw, Loader2, RotateCw, Scan, Wrench, RotateCcw, Box, Activity, Tags } from 'lucide-react';
+import { useDashboard, useDockerDashboard, useHosts, useTags, triggerScanAll, triggerDockerScanAll, isScanRunning, getActiveScanPromise, useActivity } from '../hooks/useApi';
+import { formatUTC, formatUptime, timeAgo } from '../utils/formatDate';
 import { useState, useEffect } from 'react';
 import type { Host } from '../types';
 
 interface Props {
-  onNavigate: (tab: string) => void;
+  onNavigate: (tab: string, filter?: string) => void;
 }
 
 function hostStatus(host: Host): 'offline' | 'reboot' | 'updates' | 'current' {
@@ -120,6 +120,8 @@ export default function HomePage({ onNavigate }: Props) {
   const { data: patchSummary, loading: patchLoading, refresh: refreshPatch } = useDashboard();
   const { data: dockerSummary, loading: dockerLoading, refresh: refreshDocker } = useDockerDashboard();
   const { hosts, refresh: refreshHosts } = useHosts();
+  const { data: activityEvents, loading: activityLoading, refresh: refreshActivity } = useActivity(15);
+  const { tags } = useTags();
   const [scanning, setScanning] = useState(() => isScanRunning());
 
   // If an auto-scan was triggered (e.g. from wizard), pick it up on mount
@@ -128,7 +130,7 @@ export default function HomePage({ onNavigate }: Props) {
     if (active) {
       setScanning(true);
       active
-        .then(() => Promise.all([refreshPatch(), refreshDocker(), refreshHosts()]))
+        .then(() => Promise.all([refreshPatch(), refreshDocker(), refreshHosts(), refreshActivity()]))
         .finally(() => setScanning(false));
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
@@ -140,7 +142,7 @@ export default function HomePage({ onNavigate }: Props) {
     setScanning(true);
     try {
       await Promise.all([triggerScanAll(), triggerDockerScanAll()]);
-      await Promise.all([refreshPatch(), refreshDocker(), refreshHosts()]);
+      await Promise.all([refreshPatch(), refreshDocker(), refreshHosts(), refreshActivity()]);
     } finally {
       setScanning(false);
     }
@@ -240,39 +242,50 @@ export default function HomePage({ onNavigate }: Props) {
                 {/* Metric tiles */}
                 <div className="lg:col-span-8 grid grid-cols-2 lg:grid-cols-4 gap-3">
                   {/* Total Hosts */}
-                  <div className="bg-gradient-to-b from-blue-500/15 to-blue-500/5 border border-blue-500/20 rounded-xl p-4 flex flex-col justify-between">
+                  <button
+                    onClick={() => onNavigate('patches', 'online')}
+                    className="bg-gradient-to-b from-blue-500/15 to-blue-500/5 border border-blue-500/20 rounded-xl p-4 flex flex-col justify-between text-left hover:border-blue-400/40 transition-colors cursor-pointer"
+                  >
                     <span className="text-[11px] text-blue-300/70 font-medium uppercase tracking-wider">Hosts</span>
                     <div className="mt-2">
                       <span className="text-3xl font-bold text-blue-300">{patchSummary?.total_hosts ?? 0}</span>
                     </div>
                     <span className="text-[10px] text-blue-400/50 mt-1">{patchSummary?.hosts_online ?? 0} online</span>
-                  </div>
+                  </button>
 
                   {/* Pending Packages */}
-                  <div className="bg-gradient-to-b from-purple-500/15 to-purple-500/5 border border-purple-500/20 rounded-xl p-4 flex flex-col justify-between">
+                  <button
+                    onClick={() => onNavigate('patches', 'updates')}
+                    className="bg-gradient-to-b from-purple-500/15 to-purple-500/5 border border-purple-500/20 rounded-xl p-4 flex flex-col justify-between text-left hover:border-purple-400/40 transition-colors cursor-pointer"
+                  >
                     <span className="text-[11px] text-purple-300/70 font-medium uppercase tracking-wider">Packages</span>
                     <div className="mt-2">
                       <span className="text-3xl font-bold text-purple-300">{patchSummary?.total_pending_packages ?? 0}</span>
                     </div>
                     <span className="text-[10px] text-purple-400/50 mt-1">pending updates</span>
-                  </div>
+                  </button>
 
                   {/* Docker Stacks */}
-                  <div className="bg-gradient-to-b from-cyan-500/15 to-cyan-500/5 border border-cyan-500/20 rounded-xl p-4 flex flex-col justify-between">
+                  <button
+                    onClick={() => onNavigate('docker')}
+                    className="bg-gradient-to-b from-cyan-500/15 to-cyan-500/5 border border-cyan-500/20 rounded-xl p-4 flex flex-col justify-between text-left hover:border-cyan-400/40 transition-colors cursor-pointer"
+                  >
                     <span className="text-[11px] text-cyan-300/70 font-medium uppercase tracking-wider">Docker</span>
                     <div className="mt-2">
                       <span className="text-3xl font-bold text-cyan-300">{dockerSummary?.total_stacks ?? 0}</span>
                     </div>
                     <span className="text-[10px] text-cyan-400/50 mt-1">{dockerSummary?.stacks_with_updates ?? 0} need updates</span>
-                  </div>
+                  </button>
 
                   {/* Need Attention */}
-                  <div className={`bg-gradient-to-b rounded-xl p-4 flex flex-col justify-between ${
+                  <button
+                    onClick={() => onNavigate('patches', (patchSummary?.hosts_needing_reboot ?? 0) > 0 ? 'reboot' : 'updates')}
+                    className={`bg-gradient-to-b rounded-xl p-4 flex flex-col justify-between text-left cursor-pointer transition-colors ${
                     (patchSummary?.hosts_needing_reboot ?? 0) > 0
-                      ? 'from-red-500/15 to-red-500/5 border border-red-500/20'
+                      ? 'from-red-500/15 to-red-500/5 border border-red-500/20 hover:border-red-400/40'
                       : (patchSummary?.hosts_with_updates ?? 0) > 0
-                        ? 'from-amber-500/15 to-amber-500/5 border border-amber-500/20'
-                        : 'from-emerald-500/15 to-emerald-500/5 border border-emerald-500/20'
+                        ? 'from-amber-500/15 to-amber-500/5 border border-amber-500/20 hover:border-amber-400/40'
+                        : 'from-emerald-500/15 to-emerald-500/5 border border-emerald-500/20 hover:border-emerald-400/40'
                   }`}>
                     <span className="text-[11px] text-gray-300/70 font-medium uppercase tracking-wider">Attention</span>
                     <div className="mt-2">
@@ -289,7 +302,7 @@ export default function HomePage({ onNavigate }: Props) {
                         ? `${patchSummary?.hosts_needing_reboot} reboot required`
                         : 'hosts need action'}
                     </span>
-                  </div>
+                  </button>
                 </div>
               </div>
 
@@ -322,7 +335,7 @@ export default function HomePage({ onNavigate }: Props) {
                           : 'text-gray-500 hover:text-gray-300 hover:bg-gray-800'
                       }`}
                     >
-                      All Hosts
+                      All Hosts <span className="ml-1 text-[10px] opacity-60">{hosts.length}</span>
                     </button>
                     {osTypes.map(t => (
                       <button
@@ -334,7 +347,7 @@ export default function HomePage({ onNavigate }: Props) {
                             : 'text-gray-500 hover:text-gray-300 hover:bg-gray-800'
                         }`}
                       >
-                        {osLabel(t)}
+                        {osLabel(t)} <span className="ml-0.5 text-[10px] opacity-60">{hosts.filter(h => h.os_type === t).length}</span>
                       </button>
                     ))}
                   </div>
@@ -354,6 +367,18 @@ export default function HomePage({ onNavigate }: Props) {
                           <span className="text-sm font-medium w-36 truncate group-hover:text-white transition-colors">
                             {host.hostname}
                           </span>
+                          {host.tags && host.tags.length > 0 && (
+                            <div className="flex items-center gap-1">
+                              {host.tags.map(t => (
+                                <span
+                                  key={t.id}
+                                  className="w-2 h-2 rounded-full"
+                                  style={{ backgroundColor: t.color }}
+                                  title={t.name}
+                                />
+                              ))}
+                            </div>
+                          )}
                           <span className="text-xs text-gray-500 w-28 font-mono">{host.ip_address}</span>
                           {/* Fixed-width wrapper so the uptime pill that follows
                               lines up vertically across all rows, regardless of
@@ -478,11 +503,89 @@ export default function HomePage({ onNavigate }: Props) {
                       <p className="text-sm text-gray-600">No data yet</p>
                     )}
                   </button>
+
+                  {/* Tags card */}
+                  {tags.length > 0 && (
+                    <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
+                      <div className="flex items-center gap-2 mb-3">
+                        <Tags className="h-4 w-4 text-teal-400" />
+                        <span className="font-semibold text-sm">Tags</span>
+                      </div>
+                      <div className="flex flex-wrap gap-1.5">
+                        {tags.map(tag => (
+                          <button
+                            key={tag.id}
+                            onClick={() => onNavigate('patches', `tag:${tag.id}`)}
+                            className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium text-white/90 hover:brightness-110 transition-all"
+                            style={{ backgroundColor: tag.color }}
+                          >
+                            {tag.name}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </>
           )}
+
+          {/* Activity Feed */}
+          <ActivityFeed events={activityEvents} loading={activityLoading} />
         </>
+      )}
+    </div>
+  );
+}
+
+const EVENT_ICONS: Record<string, typeof Activity> = {
+  scan: Scan,
+  patch: Wrench,
+  reboot: RotateCcw,
+  docker_scan: Box,
+  docker_update: Box,
+};
+
+const EVENT_COLORS: Record<string, string> = {
+  scan: 'text-blue-400',
+  patch: 'text-amber-400',
+  reboot: 'text-red-400',
+  docker_scan: 'text-purple-400',
+  docker_update: 'text-purple-400',
+};
+
+function ActivityFeed({ events, loading }: { events: import('../types').ActivityLog[]; loading: boolean }) {
+
+  return (
+    <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
+      <div className="px-5 py-3 border-b border-gray-800 flex items-center gap-2">
+        <Activity className="h-4 w-4 text-gray-500" />
+        <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Recent Activity</span>
+      </div>
+      {loading ? (
+        <div className="flex justify-center py-8">
+          <Loader2 className="h-5 w-5 animate-spin text-gray-600" />
+        </div>
+      ) : events.length === 0 ? (
+        <div className="px-5 py-8 text-center text-sm text-gray-600">
+          No activity yet. Run a scan to get started.
+        </div>
+      ) : (
+        <div className="divide-y divide-gray-800/50">
+          {events.map((e) => {
+            const Icon = EVENT_ICONS[e.event_type] || Activity;
+            const color = EVENT_COLORS[e.event_type] || 'text-gray-400';
+            return (
+              <div key={e.id} className="flex items-center gap-3 px-5 py-2.5">
+                <Icon className={`h-3.5 w-3.5 ${color} shrink-0`} />
+                <span className="text-sm text-gray-300 flex-1 truncate">{e.message}</span>
+                <span className="text-[10px] text-gray-600 shrink-0 w-20 text-right" title={formatUTC(e.timestamp)}>
+                  {timeAgo(e.timestamp)}
+                </span>
+              </div>
+            );
+          })}
+        </div>
       )}
     </div>
   );

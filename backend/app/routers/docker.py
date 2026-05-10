@@ -20,6 +20,7 @@ from app.models import (
     DockerUpdateHistoryResponse,
     HostModel,
 )
+from app.services.activity import log_activity
 from app.services.docker_scanner import scan_all_docker_hosts, scan_docker_host_by_id
 from app.services.docker_updater import update_stack_by_id
 
@@ -148,6 +149,7 @@ async def scan_all_docker():
     """Scan all Docker-enabled hosts for compose stacks and updates."""
     async with async_session() as db:
         results = await scan_all_docker_hosts(db)
+        await log_activity(db, 'docker_scan', f'Docker fleet scan complete: {len(results)} hosts scanned')
     return {"status": "ok", "results": results}
 
 
@@ -165,6 +167,14 @@ async def update_docker_stack(stack_id: int):
     """Pull latest images and recreate a Docker stack."""
     try:
         history = await update_stack_by_id(stack_id)
+        async with async_session() as db:
+            result = await db.execute(
+                select(DockerStackModel).options(joinedload(DockerStackModel.host)).where(DockerStackModel.id == stack_id)
+            )
+            stack = result.scalar_one_or_none()
+            name = stack.stack_name if stack else f'stack {stack_id}'
+            hname = stack.host.hostname if stack and stack.host else None
+            await log_activity(db, 'docker_update', f'Updated {name}: {history.status}, {history.images_updated} images', hostname=hname)
         return {
             "status": history.status,
             "images_updated": history.images_updated,

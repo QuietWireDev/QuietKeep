@@ -24,6 +24,7 @@ type Tab = 'home' | 'patches' | 'docker' | 'diagnostics' | 'threats' | 'settings
 function App() {
   const [activeTab, setActiveTab] = useState<Tab>('home');
   const [settingsSection, setSettingsSection] = useState<string | undefined>();
+  const [patchFilter, setPatchFilter] = useState<string | undefined>();
   const auth = useAuth();
   const { loading, refresh } = useHosts();
   const { settings } = useSettings();
@@ -79,9 +80,9 @@ function App() {
   }
 
   return (
-    <Layout activeTab={activeTab} onTabChange={setActiveTab} onLogout={auth.logout}>
-      {activeTab === 'home' && <HomePage onNavigate={(tab) => setActiveTab(tab as Tab)} />}
-      {activeTab === 'patches' && <Dashboard />}
+    <Layout activeTab={activeTab} onTabChange={setActiveTab} onLogout={auth.logout} buildTag={settings?.build_tag}>
+      {activeTab === 'home' && <HomePage onNavigate={(tab, filter?) => { setPatchFilter(filter); setActiveTab(tab as Tab); }} />}
+      {activeTab === 'patches' && <Dashboard initialFilter={patchFilter} onFilterConsumed={() => setPatchFilter(undefined)} />}
       {activeTab === 'docker' && <DockerDashboard />}
       {activeTab === 'diagnostics' && <DiagnosticsPage />}
       {activeTab === 'threats' && <ThreatIntel />}

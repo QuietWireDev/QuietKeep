@@ -113,6 +113,7 @@ async def _migrate(conn) -> None:
     await _ensure_column(conn, "hosts", "last_boot_at", "DATETIME")
     await _ensure_column(conn, "hosts", "kernel_version", "VARCHAR")
     await _ensure_column(conn, "hosts", "os_pretty_name", "VARCHAR")
+    await _ensure_column(conn, "hosts", "disk_usage_percent", "INTEGER")
 
     # Index migrations. Mirrors the index=True / composite Index() declarations
     # in models.py so existing DBs pick up the same indexes a fresh DB gets.

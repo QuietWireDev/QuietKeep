@@ -8,7 +8,7 @@ from datetime import datetime
 from typing import Optional
 
 from pydantic import BaseModel, field_validator
-from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Index, Integer, String, Text
+from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Index, Integer, String, Table, Text
 from sqlalchemy.orm import relationship
 
 from app.database import Base
@@ -26,6 +26,25 @@ class AdminUserModel(Base):
     totp_secret = Column(String, nullable=True)
     totp_enabled = Column(Boolean, default=False)
     created_at = Column(DateTime, nullable=False)
+
+
+# Many-to-many junction table: hosts <-> tags
+host_tags = Table(
+    "host_tags",
+    Base.metadata,
+    Column("host_id", Integer, ForeignKey("hosts.id", ondelete="CASCADE"), primary_key=True),
+    Column("tag_id", Integer, ForeignKey("tags.id", ondelete="CASCADE"), primary_key=True),
+)
+
+
+class TagModel(Base):
+    __tablename__ = "tags"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    name = Column(String, unique=True, nullable=False)
+    color = Column(String, nullable=False, default="#6b7280")  # tailwind gray-500
+
+    hosts = relationship("HostModel", secondary=host_tags, back_populates="tags")
 
 
 class HostModel(Base):
@@ -70,10 +89,15 @@ class HostModel(Base):
     # on every scan. NULL when the host has never been scanned or the
     # file was missing/unreadable.
     os_pretty_name = Column(String, nullable=True, default=None)
+    # Root filesystem usage percentage (0-100) from `df /`. Updated on every
+    # scan. NULL when the host has never been scanned or the probe failed.
+    # UI renders color-coded: green <70%, amber 70-89%, red >=90%.
+    disk_usage_percent = Column(Integer, nullable=True, default=None)
 
     packages = relationship("PackageModel", back_populates="host", cascade="all, delete-orphan")
     patch_history = relationship("PatchHistoryModel", back_populates="host", cascade="all, delete-orphan")
     docker_stacks = relationship("DockerStackModel", back_populates="host", cascade="all, delete-orphan")
+    tags = relationship("TagModel", secondary=host_tags, back_populates="hosts")
 
 
 class PackageModel(Base):
@@ -180,6 +204,17 @@ class AppSettingModel(Base):
     value = Column(String, nullable=False)
 
 
+class ActivityLogModel(Base):
+    __tablename__ = "activity_log"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    timestamp = Column(DateTime, default=datetime.utcnow, index=True)
+    event_type = Column(String, nullable=False)  # 'scan', 'patch', 'reboot', 'docker_scan', 'docker_update'
+    host_id = Column(Integer, nullable=True)  # nullable for fleet-wide events
+    hostname = Column(String, nullable=True)
+    message = Column(String, nullable=False)
+
+
 # ─── Pydantic Schemas ────────────────────────────────────────────────────────
 
 
@@ -224,11 +259,14 @@ class HostResponse(HostBase):
     kernel_version: Optional[str] = None
     # Human-readable OS name from /etc/os-release PRETTY_NAME.
     os_pretty_name: Optional[str] = None
+    # Root filesystem usage percentage (0-100) from `df /`.
+    disk_usage_percent: Optional[int] = None
     # Decoded list of package names the last patch left held back. Empty
     # list when nothing is deferred. The ORM stores this as a JSON-encoded
     # string (or NULL); _decode_held_back turns that back into a list so
     # the API returns proper JSON to the frontend.
     held_back_packages: list[str] = []
+    tags: list["TagResponse"] = []
 
     @field_validator("held_back_packages", mode="before")
     @classmethod
@@ -353,3 +391,34 @@ class DockerDashboardResponse(BaseModel):
     containers_with_updates: int
     docker_hosts: int
     last_scan: Optional[datetime] = None
+
+
+class TagResponse(BaseModel):
+    id: int
+    name: str
+    color: str
+
+    class Config:
+        from_attributes = True
+
+
+class TagCreate(BaseModel):
+    name: str
+    color: str = "#6b7280"
+
+
+class TagUpdate(BaseModel):
+    name: Optional[str] = None
+    color: Optional[str] = None
+
+
+class ActivityLogResponse(BaseModel):
+    id: int
+    timestamp: datetime
+    event_type: str
+    host_id: Optional[int] = None
+    hostname: Optional[str] = None
+    message: str
+
+    class Config:
+        from_attributes = True

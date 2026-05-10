@@ -13,9 +13,10 @@ interface LayoutProps {
   activeTab: Tab;
   onTabChange: (tab: Tab) => void;
   onLogout?: () => void;
+  buildTag?: string;
 }
 
-export default function Layout({ children, activeTab, onTabChange, onLogout }: LayoutProps) {
+export default function Layout({ children, activeTab, onTabChange, onLogout, buildTag }: LayoutProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -42,6 +43,11 @@ export default function Layout({ children, activeTab, onTabChange, onLogout }: L
                   <text x="32" y="42" textAnchor="middle" fontFamily="Arial, Helvetica, sans-serif" fontWeight="bold" fontSize="22" fill="#60a5fa" letterSpacing="-1">QW</text>
                 </svg>
                 <h1 className="text-lg font-bold tracking-tight">QuietKeep</h1>
+                {buildTag && (
+                  <span className="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded bg-amber-500/20 text-amber-400 border border-amber-500/30">
+                    {buildTag}
+                  </span>
+                )}
               </div>
               <nav className="flex items-center gap-1 ml-2">
                 {([

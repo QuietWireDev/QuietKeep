@@ -4,7 +4,7 @@
 // FAQ content is statically defined. No backend calls needed.
 // Author: QuietWire (Dennis Ayotte)
 
-import { ChevronDown, Search, ExternalLink, Bug, Lightbulb } from 'lucide-react';
+import { ChevronDown, Search, ExternalLink, Bug, Lightbulb, BookOpen } from 'lucide-react';
 import { useState, useMemo, useEffect, useRef, type ReactNode } from 'react';
 
 interface FAQItem {
@@ -47,6 +47,39 @@ const sections: { title: string; items: FAQItem[] }[] = [
       {
         q: 'What does "MONITOR ONLY" mean?',
         a: 'The QuietKeep server itself is included in the host list for monitoring, so you can see its patch status on the dashboard. But you can\'t patch or reboot it from the UI. That would be like pulling the rug out from under yourself. Update the QuietKeep server manually via SSH.',
+      },
+      {
+        q: 'How does Patch All work?',
+        a: 'Click "Patch All" on the System Patches page. QuietKeep patches every host that has pending updates, skipping hosts that are already current. Each host is patched independently. A results banner shows success or failure per host, and a fleet-wide re-scan runs automatically afterward.',
+      },
+      {
+        q: 'How do I export patch history?',
+        a: 'Click the "Export" button on the System Patches page for a fleet-wide Excel file (.xlsx with one sheet per host, one row per package). For a single host, click the download icon in that host\'s Patch History section to get a CSV.',
+      },
+    ],
+  },
+  {
+    title: 'Host Tags',
+    items: [
+      {
+        q: 'What are host tags?',
+        a: 'Tags let you organize hosts by role, location, environment, or any category you choose. Each tag has a name and a color. You can assign multiple tags to a host, and filter the dashboard by tag to focus on a specific group.',
+      },
+      {
+        q: 'How do I create a tag?',
+        a: 'Go to Settings > Tags. Enter a name, pick a color from the 10 presets, and click Create. You can rename or recolor a tag later by clicking on it in the list.',
+      },
+      {
+        q: 'How do I assign tags to a host?',
+        a: 'Click any host to open its detail page. Below the hostname, all available tags appear as pills. Click a pill to assign the tag (it fills with the tag color). Click again to remove it. Changes take effect immediately.',
+      },
+      {
+        q: 'How do I filter hosts by tag?',
+        a: 'On the System Patches page, tags appear in the filter bar after the OS filters. Click a tag to show only hosts with that tag. You can also click a tag pill in the Tags card on the Home page to jump straight to a filtered view.',
+      },
+      {
+        q: 'What happens if I delete a tag?',
+        a: 'Deleting a tag removes it from all hosts. The hosts themselves are not affected. Only the tag association is removed.',
       },
     ],
   },
@@ -147,6 +180,14 @@ const sections: { title: string; items: FAQItem[] }[] = [
       {
         q: 'Can I manage Windows hosts?',
         a: 'No. QuietKeep is built for Linux. It supports Debian/Ubuntu (apt), Arch/CachyOS (pacman), and Proxmox.',
+      },
+      {
+        q: 'What does the activity feed show?',
+        a: 'The Recent Activity section on the Home page shows a timeline of scans, patches, reboots, and Docker updates with relative timestamps (e.g. "2 min ago"). Hover over the timestamp to see the exact date and time. It auto-refreshes after you perform operations.',
+      },
+      {
+        q: 'What do the disk usage colors mean in Diagnostics?',
+        a: 'Green means under 70% used, amber means 70-90%, and red means over 90%. Disk usage is collected during each scan. High disk usage can cause patch and Docker update failures, so keep an eye on red hosts.',
       },
       {
         q: 'Can I get notified when updates are available?',
@@ -302,6 +343,26 @@ export default function HelpFAQ() {
             </div>
           </div>
         ))}
+      </div>
+
+      {/* User Guide */}
+      <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
+        <div className="flex items-center gap-2 mb-3">
+          <BookOpen className="h-4 w-4 text-blue-400" />
+          <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">User Guide</span>
+        </div>
+        <p className="text-sm text-gray-400 mb-4">
+          Full walkthrough from installation to daily use, including SSH setup, host management, patching, Docker updates, tags, and troubleshooting.
+        </p>
+        <a
+          href="https://github.com/quietwire-dev/QuietKeep/blob/main/docs/USER_GUIDE.md"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600/20 text-blue-400 hover:bg-blue-600/30 transition-colors text-sm font-medium"
+        >
+          <ExternalLink className="h-4 w-4" />
+          Open User Guide
+        </a>
       </div>
 
       {/* Report a Bug / Feature Request */}

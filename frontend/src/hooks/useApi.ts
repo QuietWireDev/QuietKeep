@@ -6,7 +6,7 @@
 // Author: QuietWire (Dennis Ayotte)
 
 import { useState, useEffect, useCallback } from 'react';
-import type { Host, HostCreate, HostUpdate, HostDetail, DashboardSummary, PatchHistory, DockerStack, DockerStackDetail, DockerDashboardSummary, DockerUpdateHistory, SSHTestResult, CSVImportResult, AppSettings, AppSettingsUpdate, KEVCatalogResponse, KEVSummary, ThreatActor, SudoersFixResult, SudoersProbeResult } from '../types';
+import type { Host, HostCreate, HostUpdate, HostDetail, DashboardSummary, PatchHistory, DockerStack, DockerStackDetail, DockerDashboardSummary, DockerUpdateHistory, SSHTestResult, CSVImportResult, AppSettings, AppSettingsUpdate, KEVCatalogResponse, KEVSummary, ThreatActor, SudoersFixResult, SudoersProbeResult, Tag } from '../types';
 
 const API_BASE = '/api';
 const DEFAULT_CACHE_TTL = 30_000; // 30 seconds
@@ -22,6 +22,7 @@ async function fetchJson<T>(url: string, options?: RequestInit): Promise<T> {
     ...options,
   });
   if (!res.ok) throw new Error(`API error: ${res.status} ${res.statusText}`);
+  if (res.status === 204) return undefined as T;
   return res.json();
 }
 
@@ -180,6 +181,18 @@ export async function triggerPatchHosts(hostIds: number[]): Promise<void> {
 
 export async function triggerPatchHost(hostId: number): Promise<void> {
   await fetchJson(`/patch/${hostId}`, { method: 'POST' });
+}
+
+export interface BulkPatchResult {
+  host_id: number;
+  hostname: string;
+  status: string;
+  packages_updated: number;
+  error?: string;
+}
+
+export async function triggerPatchAll(): Promise<{ message: string; results: BulkPatchResult[] }> {
+  return fetchJson('/patch/all', { method: 'POST' });
 }
 
 // Install the packages apt kept back on the last patch run. Runs
@@ -490,6 +503,22 @@ export function useKEVCatalog(params: { days?: number; vendor?: string; search?:
   return { data, loading, refresh };
 }
 
+export function useActivity(limit: number = 20) {
+  const [data, setData] = useState<import('../types').ActivityLog[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const refresh = useCallback(() => {
+    setLoading(true);
+    fetchCached<import('../types').ActivityLog[]>(`/activity?limit=${limit}`, 15_000)
+      .then(setData)
+      .catch(e => console.error('Failed to fetch activity:', e))
+      .finally(() => setLoading(false));
+  }, [limit]);
+
+  useEffect(() => { refresh(); }, [refresh]);
+  return { data, loading, refresh };
+}
+
 export function useThreatActors() {
   const [actors, setActors] = useState<ThreatActor[]>([]);
   const [loading, setLoading] = useState(true);
@@ -502,4 +531,50 @@ export function useThreatActors() {
   }, []);
 
   return { actors, loading };
+}
+
+// ─── Tags ────────────────────────────────────────────────────────────────────
+
+export function useTags() {
+  const [tags, setTags] = useState<Tag[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const refresh = useCallback(() => {
+    setLoading(true);
+    fetchJson<Tag[]>('/tags')
+      .then(setTags)
+      .catch(e => console.error('Failed to fetch tags:', e))
+      .finally(() => setLoading(false));
+  }, []);
+
+  useEffect(() => { refresh(); }, [refresh]);
+  return { tags, loading, refresh };
+}
+
+export async function createTag(name: string, color: string): Promise<Tag> {
+  return fetchJson('/tags', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name, color }),
+  });
+}
+
+export async function updateTag(tagId: number, data: { name?: string; color?: string }): Promise<Tag> {
+  return fetchJson(`/tags/${tagId}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+}
+
+export async function deleteTag(tagId: number): Promise<void> {
+  await fetchJson(`/tags/${tagId}`, { method: 'DELETE' });
+}
+
+export async function assignTag(tagId: number, hostId: number): Promise<void> {
+  await fetchJson(`/tags/${tagId}/hosts/${hostId}`, { method: 'POST' });
+}
+
+export async function removeTag(tagId: number, hostId: number): Promise<void> {
+  await fetchJson(`/tags/${tagId}/hosts/${hostId}`, { method: 'DELETE' });
 }

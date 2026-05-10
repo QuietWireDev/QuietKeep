@@ -1,8 +1,8 @@
 <p align="center">
-  <img src="https://img.shields.io/badge/version-1.0.3-brightgreen" alt="Version: 1.0.3" />
+  <img src="https://img.shields.io/badge/version-1.1.0-brightgreen" alt="Version: 1.1.0" />
   <img src="https://img.shields.io/badge/license-AGPL--3.0-green" alt="License: AGPL-3.0" />
   <img src="https://img.shields.io/badge/python-3.12-blue" alt="Python 3.12" />
-  <img src="https://img.shields.io/badge/react-18-61dafb" alt="React 18" />
+  <img src="https://img.shields.io/badge/react-19-61dafb" alt="React 19" />
 </p>
 
 # QuietKeep
@@ -42,12 +42,17 @@ QuietKeep is a self-hosted web application that lets you manage system updates a
 - **All API routes protected** (except health check and auth endpoints)
 
 ### Dashboard & UX
-- **Home overview** with at-a-glance status of all hosts and stacks
+- **Home overview** with at-a-glance status of all hosts, stacks, tags, and recent activity
 - **Clickable filter cards** let you drill into hosts that need updates, reboots, or Docker attention
+- **Host tags** to organize hosts by role, location, or environment with colored labels and filtering
+- **Bulk patch all** hosts with one click, per-host error surfacing, and automatic re-scan
+- **Patch history export** as per-host CSV or fleet-wide Excel (.xlsx with per-host tabs)
+- **Recent activity feed** with color-coded timeline and relative timestamps
+- **Disk usage monitoring** with color-coded thresholds in the Diagnostics table
 - **Light, Dark, and System themes**
 - **First-run wizard** with SSH key generation, host import, key deployment, and pre-flight checks
-- **Settings page** for SSH config, scan intervals, security, and theme
-- **Built-in Help** with searchable FAQ
+- **Settings page** for SSH config, scan intervals, security, tags, and theme
+- **Built-in Help** with searchable FAQ and link to the full User Guide
 
 ---
 
@@ -71,7 +76,7 @@ QuietKeep connects to your hosts over SSH using key-based authentication. It run
 | Layer | Technology |
 |-------|-----------|
 | Backend | Python 3.12, FastAPI, SQLAlchemy, asyncssh |
-| Frontend | React 18, TypeScript, Tailwind CSS, Lucide icons |
+| Frontend | React 19, TypeScript, Tailwind CSS 4, Lucide icons |
 | Database | SQLite (zero config) |
 | Transport | SSH (key-based, no agents) |
 | Deployment | Docker Compose (single container, builds from source) |
@@ -80,7 +85,20 @@ QuietKeep connects to your hosts over SSH using key-based authentication. It run
 
 ## Current Status
 
-QuietKeep v1.0.0 is the first public release. All core features are functional and tested on an 18-host fleet.
+All core features are functional and tested on an 18-host fleet.
+
+### Shipped in v1.1.0
+- ✅ **Host tags**: organize hosts by role, location, or environment with colored labels; filter on Home and Dashboard
+- ✅ **Bulk patch all**: one-click patch all hosts with pending updates; per-host error surfacing and automatic re-scan
+- ✅ **Recent activity feed**: color-coded timeline of scans, patches, reboots, and Docker updates with relative timestamps
+- ✅ **Patch history export**: per-host CSV and fleet-wide Excel (.xlsx with per-host tabs, one row per package)
+- ✅ **Disk usage monitoring**: color-coded column in Diagnostics (green/amber/red thresholds)
+- ✅ **Build tag badge**: optional TEST/BETA label in nav bar via BUILD_TAG env var
+- ✅ **Clickable metric tiles**: Home page cards navigate to patches/docker pre-filtered
+- ✅ **UI polish**: host count badges on filter tabs, active filter chips, relative timestamps in activity feed
+- ✅ **Tag management**: create, rename, recolor, delete tags in Settings; assign tags per host from Host Detail
+- ✅ **Tags card on Home**: colored pills link directly to Dashboard filtered by that tag
+- ✅ **User Guide link**: accessible from About section and Help page
 
 ### Shipped in v1.0.0
 - ✅ Multi-OS host management (apt, pacman, kali, proxmox)
@@ -103,12 +121,11 @@ QuietKeep v1.0.0 is the first public release. All core features are functional a
 - ✅ Password reset via filesystem token (no email or cloud required)
 
 ### Planned
-- 📋 Disk space monitoring with color-coded thresholds in Diagnostics (helps predict update failures)
 - 📋 Email/webhook notifications for available updates
 - 📋 Selective patching (choose which packages to update)
-- 📋 Host groups and bulk operations
 - 📋 Multi-user support with roles
 - 📋 Pre-built Docker images on GitHub Container Registry
+- 📋 Linux-aware CVE cross-reference (NVD API, Ubuntu/Debian trackers)
 
 ---
 

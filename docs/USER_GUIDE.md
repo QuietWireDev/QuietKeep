@@ -18,15 +18,16 @@ users who may be new to Docker, SSH, or Linux server administration.
 9. [Sudoers Configuration](#9-sudoers-configuration)
 10. [Scanning Hosts](#10-scanning-hosts)
 11. [Patching Hosts](#11-patching-hosts)
-12. [Docker Stack Management](#12-docker-stack-management)
-13. [Diagnostics](#13-diagnostics)
-14. [Threat Intelligence](#14-threat-intelligence)
-15. [Settings](#15-settings)
-16. [Two-Factor Authentication](#16-two-factor-authentication)
-17. [Reverse Proxy and SSL](#17-reverse-proxy-and-ssl)
-18. [Updating QuietKeep](#18-updating-quietkeep)
-19. [Password Reset](#19-password-reset)
-20. [Troubleshooting](#20-troubleshooting)
+12. [Host Tags](#12-host-tags)
+13. [Docker Stack Management](#13-docker-stack-management)
+14. [Diagnostics](#14-diagnostics)
+15. [Threat Intelligence](#15-threat-intelligence)
+16. [Settings](#16-settings)
+17. [Two-Factor Authentication](#17-two-factor-authentication)
+18. [Reverse Proxy and SSL](#18-reverse-proxy-and-ssl)
+19. [Updating QuietKeep](#19-updating-quietkeep)
+20. [Password Reset](#20-password-reset)
+21. [Troubleshooting](#21-troubleshooting)
 
 ---
 
@@ -330,6 +331,27 @@ Every patch attempt is logged with:
 
 View patch history on the Host Detail page under **Patch History**.
 
+### Bulk Patch All
+
+To patch every host that has pending updates at once:
+
+1. Go to the **System Patches** tab
+2. Click **Patch All** in the header
+3. Confirm the action in the dialog
+
+QuietKeep patches only hosts that have pending updates. Each host is
+patched independently. After all hosts finish, a results banner shows
+success or failure per host. A fleet-wide re-scan runs automatically.
+
+### Exporting Patch History
+
+To export patch history for compliance or record-keeping:
+
+- **Fleet-wide Excel**: Click **Export** on the System Patches page.
+  Downloads an `.xlsx` file with one sheet per host, one row per package.
+- **Per-host CSV**: Click the download icon on any host's Patch History
+  section.
+
 ### Held-Back Packages
 
 Sometimes the package manager holds back packages that require new
@@ -345,7 +367,42 @@ host remotely. The host will be temporarily unavailable during reboot.
 
 ---
 
-## 12. Docker Stack Management
+## 12. Host Tags
+
+Tags let you organize hosts by role, location, environment, or any
+category you choose. Each tag has a name and a color.
+
+### Creating Tags
+
+1. Go to **Settings > Tags**
+2. Enter a tag name and pick a color from the 10 presets
+3. Click **+ Create**
+
+You can rename a tag by clicking its name in the list. Delete a tag
+with the trash icon (this removes it from all hosts, not the hosts
+themselves).
+
+### Assigning Tags to Hosts
+
+1. Click any host to open its detail page
+2. Below the hostname, all available tags appear as pills
+3. Click a pill to assign it (fills with the tag color)
+4. Click again to remove it
+
+### Filtering by Tag
+
+On the **System Patches** page, tags appear in the filter bar after
+the OS filters. Click a tag to show only hosts with that tag. An
+active filter chip appears below the filter bar showing what is
+selected, with an x button to clear it.
+
+On the **Home** page, the Tags card in the right sidebar shows all
+tags as colored pills. Click one to jump directly to the System
+Patches page filtered by that tag.
+
+---
+
+## 13. Docker Stack Management
 
 QuietKeep discovers and manages Docker Compose stacks on any host where
 you checked "Has Docker" when adding it.
@@ -376,7 +433,7 @@ status, and full output.
 
 ---
 
-## 13. Diagnostics
+## 14. Diagnostics
 
 The **Diagnostics** tab shows fleet-wide system health at a glance:
 
@@ -385,6 +442,7 @@ The **Diagnostics** tab shows fleet-wide system health at a glance:
 | OS | `/etc/os-release` PRETTY_NAME |
 | Kernel | `uname -r` |
 | Uptime | System uptime since last boot |
+| Disk Usage | `df -h /` (color-coded: green < 70%, amber 70-90%, red > 90%) |
 | Reboot Required | Checks for `/var/run/reboot-required` |
 | Sudoers | Whether QuietKeep has the permissions it needs |
 | Last Scan | Timestamp of the most recent scan |
@@ -397,7 +455,7 @@ information.
 
 ---
 
-## 14. Threat Intelligence
+## 15. Threat Intelligence
 
 The **Threat Intel** tab provides access to the CISA Known Exploited
 Vulnerabilities (KEV) catalog directly in QuietKeep.
@@ -419,7 +477,7 @@ vulnerabilities that attackers are using right now.
 
 ---
 
-## 15. Settings
+## 16. Settings
 
 Access Settings from the gear icon in the top-right corner.
 
@@ -437,6 +495,11 @@ Access Settings from the gear icon in the top-right corner.
 - Set the automatic scan interval (default: 6 hours)
 - Enable or disable automatic scanning
 
+### Tags
+- Create, rename, recolor, and delete host tags
+- 10 preset colors to choose from
+- Deleting a tag removes it from all hosts (hosts are not affected)
+
 ### Security
 - Change your admin password
 - Enable or disable two-factor authentication (TOTP)
@@ -444,11 +507,12 @@ Access Settings from the gear icon in the top-right corner.
 ### About
 - Version information
 - License (AGPL-3.0)
+- Link to the full User Guide on GitHub
 - Links to report bugs or request features
 
 ---
 
-## 16. Two-Factor Authentication
+## 17. Two-Factor Authentication
 
 QuietKeep supports time-based one-time passwords (TOTP) as an optional
 second factor for login.
@@ -476,7 +540,7 @@ You will need to confirm with a TOTP code.
 
 ---
 
-## 17. Reverse Proxy and SSL
+## 18. Reverse Proxy and SSL
 
 QuietKeep generates a self-signed HTTPS certificate on first startup.
 This encrypts all traffic but causes browser warnings because the
@@ -519,7 +583,7 @@ Then configure your reverse proxy to forward to `localhost:8443`.
 
 ---
 
-## 18. Updating QuietKeep
+## 19. Updating QuietKeep
 
 To update to a newer version:
 
@@ -535,7 +599,7 @@ and are not affected by rebuilds.
 
 ---
 
-## 19. Password Reset
+## 20. Password Reset
 
 If you forget your admin password, you can reset it from the server
 command line. This requires SSH or console access to the QuietKeep server.
@@ -559,7 +623,7 @@ reset requires physical or SSH access to the server.
 
 ---
 
-## 20. Troubleshooting
+## 21. Troubleshooting
 
 ### SSH connection fails with "connection error" (not "Permission denied")
 

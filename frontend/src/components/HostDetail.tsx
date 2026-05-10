@@ -5,10 +5,10 @@
 // Author: QuietWire (Dennis Ayotte)
 
 import { useState, useEffect, useMemo } from 'react';
-import { ArrowLeft, Play, RefreshCw, RotateCw, Package, Clock, Loader2, ChevronDown, ChevronRight, Terminal, ShieldCheck, ShieldAlert, ShieldQuestion, KeyRound, Cpu, Activity } from 'lucide-react';
-import type { Host } from '../types';
+import { ArrowLeft, Play, RefreshCw, RotateCw, Package, Clock, Loader2, ChevronDown, ChevronRight, Terminal, ShieldCheck, ShieldAlert, ShieldQuestion, KeyRound, Cpu, Activity, Download } from 'lucide-react';
+import type { Host, Tag } from '../types';
 import { formatUTC, formatUptime } from '../utils/formatDate';
-import { useHostDetail, useHistory, triggerScanHost, triggerPatchHost, triggerReboot, triggerInstallHeldBack, fixSudoers } from '../hooks/useApi';
+import { useHostDetail, useHistory, useTags, triggerScanHost, triggerPatchHost, triggerReboot, triggerInstallHeldBack, fixSudoers, assignTag, removeTag } from '../hooks/useApi';
 import ConfirmDialog from './ConfirmDialog';
 import FixSudoersModal from './FixSudoersModal';
 import KeyringHelpModal from './KeyringHelpModal';
@@ -38,6 +38,7 @@ interface HostDetailProps {
 export default function HostDetail({ host, onBack }: HostDetailProps) {
   const { host: detail, loading, refresh } = useHostDetail(host.id);
   const { history, loading: historyLoading, refresh: refreshHistory } = useHistory(host.id);
+  const { tags: allTags } = useTags();
   const [scanning, setScanning] = useState(false);
   const [patching, setPatching] = useState(false);
   const [rebooting, setRebooting] = useState(false);
@@ -312,6 +313,33 @@ export default function HostDetail({ host, onBack }: HostDetailProps) {
                 </span>
               )}
             </div>
+            {/* Tags */}
+            {allTags.length > 0 && (
+              <div className="flex items-center gap-1.5 mt-1.5">
+                {allTags.map(tag => {
+                  const assigned = (detail?.tags ?? host.tags)?.some((t: Tag) => t.id === tag.id);
+                  return (
+                    <button
+                      key={tag.id}
+                      onClick={async () => {
+                        if (assigned) await removeTag(tag.id, host.id);
+                        else await assignTag(tag.id, host.id);
+                        await refresh();
+                      }}
+                      className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium border transition-all ${
+                        assigned
+                          ? 'border-transparent text-white'
+                          : 'border-gray-700 text-gray-500 hover:text-gray-300 hover:border-gray-600'
+                      }`}
+                      style={assigned ? { backgroundColor: tag.color } : {}}
+                      title={assigned ? `Remove "${tag.name}"` : `Add "${tag.name}"`}
+                    >
+                      {tag.name}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
             <div className="flex items-center gap-4 mt-1 text-xs text-gray-500">
               <span className="font-mono">{host.ip_address}</span>
               <span>·</span>
@@ -516,6 +544,17 @@ export default function HostDetail({ host, onBack }: HostDetailProps) {
               Patch History
             </span>
             <span className="text-xs text-gray-600 ml-auto">{history.length} entries</span>
+            {history.length > 0 && (
+              <a
+                href={`/api/history/${host.id}/export/csv`}
+                download
+                className="ml-2 flex items-center gap-1 px-2 py-1 rounded text-[11px] font-medium text-gray-400 hover:text-white hover:bg-gray-800 transition-colors"
+                title="Export patch history as CSV"
+              >
+                <Download className="h-3.5 w-3.5" />
+                CSV
+              </a>
+            )}
           </div>
           <div className="p-3">
             {historyLoading ? (

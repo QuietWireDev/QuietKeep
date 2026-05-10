@@ -34,6 +34,16 @@ export interface Host {
   // Human-readable OS name from /etc/os-release PRETTY_NAME, e.g.
   // "Ubuntu 24.04.1 LTS". Null when not yet probed.
   os_pretty_name: string | null;
+  // Root filesystem usage percentage (0-100). Null when not yet probed.
+  // Color thresholds: green <70%, amber 70-89%, red >=90%.
+  disk_usage_percent: number | null;
+  tags: Tag[];
+}
+
+export interface Tag {
+  id: number;
+  name: string;
+  color: string;
 }
 
 export interface SudoersFixResult {
@@ -87,6 +97,7 @@ export interface AppSettings {
   auto_scan_enabled: boolean;
   wizard_completed: boolean;
   app_version: string;
+  build_tag: string;
 }
 
 export interface AppSettingsUpdate {
@@ -218,4 +229,13 @@ export interface KEVSummary {
   catalog_version: string | null;
   date_released: string | null;
   error?: string;
+}
+
+export interface ActivityLog {
+  id: number;
+  timestamp: string;
+  event_type: string;
+  host_id: number | null;
+  hostname: string | null;
+  message: string;
 }

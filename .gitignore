@@ -34,8 +34,6 @@ Thumbs.db
 
 # Database
 *.db
-*.db-shm
-*.db-wal
 *.sqlite3
 
 # Logs
@@ -45,6 +43,20 @@ Thumbs.db
 *.pem
 id_*
 
-# Dev scripts
+# Backup
+_backup-claude/
+backend/quietkeep.db*
+
+# Dev scripts (not for public release)
 scripts/
 run-scanoss.sh
+
+# Local workspace / tooling
+.windsurf/
+.code-workspace.code-workspace
+*.code-workspace
+.scancode-ignore
+
+# Vite boilerplate (not used)
+frontend/README.md
+frontend/src/assets/

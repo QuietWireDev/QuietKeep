@@ -12,6 +12,26 @@ export function formatUTC(dateStr: string): string {
 }
 
 /**
+ * Format a UTC timestamp as a relative time string (e.g. "2 min ago").
+ * Falls back to formatUTC() for anything older than 24 hours.
+ */
+export function timeAgo(dateStr: string): string {
+  const s = dateStr.endsWith('Z') ? dateStr : dateStr + 'Z';
+  const ms = new Date(s).getTime();
+  if (isNaN(ms)) return dateStr;
+  const delta = Math.max(0, Date.now() - ms);
+  const sec = Math.floor(delta / 1000);
+  if (sec < 60) return 'just now';
+  const min = Math.floor(sec / 60);
+  if (min < 60) return `${min} min ago`;
+  const hr = Math.floor(min / 60);
+  if (hr < 24) return `${hr}h ago`;
+  const days = Math.floor(hr / 24);
+  if (days < 7) return `${days}d ago`;
+  return formatUTC(dateStr);
+}
+
+/**
  * Format a host's last-boot timestamp as a concise uptime string.
  * The timestamp is an absolute UTC moment (stored server-side), so the
  * caller does not need a fresh scan to render current uptime; we just

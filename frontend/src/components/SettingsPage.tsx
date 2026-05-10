@@ -6,13 +6,14 @@
 // Author: QuietWire (Dennis Ayotte)
 
 import { useState, useRef, useEffect } from 'react';
-import { Sun, Moon, Monitor, Key, Clock, Server, Info, Check, Loader2, Copy, ChevronDown, ChevronUp, X, ShieldCheck, Upload, Lock } from 'lucide-react';
+import { Sun, Moon, Monitor, Key, Clock, Server, Info, Check, Loader2, Copy, ChevronDown, ChevronUp, X, ShieldCheck, Upload, Lock, Tags } from 'lucide-react';
 import type { AppSettings, AppSettingsUpdate, Host } from '../types';
 import { useSettings, updateSettings, useHosts } from '../hooks/useApi';
 import { applyTheme } from '../hooks/useTheme';
 import HostManagement from './HostManagement';
+import TagManagement from './TagManagement';
 
-type Section = 'general' | 'security' | 'ssh' | 'scanning' | 'hosts' | 'about';
+type Section = 'general' | 'security' | 'ssh' | 'scanning' | 'hosts' | 'tags' | 'about';
 
 const SECTIONS: { id: Section; label: string; icon: React.ReactNode }[] = [
   { id: 'general', label: 'General', icon: <Monitor className="h-4 w-4" /> },
@@ -20,6 +21,7 @@ const SECTIONS: { id: Section; label: string; icon: React.ReactNode }[] = [
   { id: 'ssh', label: 'SSH', icon: <Key className="h-4 w-4" /> },
   { id: 'scanning', label: 'Scanning', icon: <Clock className="h-4 w-4" /> },
   { id: 'hosts', label: 'Hosts', icon: <Server className="h-4 w-4" /> },
+  { id: 'tags', label: 'Tags', icon: <Tags className="h-4 w-4" /> },
   { id: 'about', label: 'About', icon: <Info className="h-4 w-4" /> },
 ];
 
@@ -836,6 +838,11 @@ export default function SettingsPage({ initialSection }: { initialSection?: stri
           </section>
         )}
 
+        {/* Tags */}
+        {activeSection === 'tags' && (
+          <TagManagement />
+        )}
+
         {/* About */}
         {activeSection === 'about' && (
           <section className="space-y-6">
@@ -865,6 +872,14 @@ export default function SettingsPage({ initialSection }: { initialSection?: stri
                 </div>
               </div>
               <div className="border-t border-gray-800 pt-4 space-y-2 text-sm">
+                <a
+                  href="https://github.com/quietwire-dev/QuietKeep/blob/main/docs/USER_GUIDE.md"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block text-blue-400 hover:text-blue-300 transition-colors"
+                >
+                  User Guide
+                </a>
                 <a
                   href="https://github.com/quietwire-dev/quietkeep"
                   target="_blank"
