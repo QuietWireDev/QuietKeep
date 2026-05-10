@@ -4,6 +4,13 @@ All notable changes to QuietKeep will be documented in this file.
 
 ---
 
+## [1.1.1] - 2026-05-10
+
+### Fixed
+- **Host edit/create returns 500 (BUG-007)**. Editing or adding a host returned "API error: 500" because the `tags` relationship was not eagerly loaded after commit. SQLAlchemy async mode does not allow lazy loading, causing a `MissingGreenlet` error during response serialization. Both `update_host` and `create_host` endpoints now re-fetch the host with `selectinload(HostModel.tags)` after commit.
+
+---
+
 ## [1.1.0] - 2026-05-10
 
 ### Added

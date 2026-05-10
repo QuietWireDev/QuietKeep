@@ -103,6 +103,8 @@ async def create_host(host_data: HostCreate, db: AsyncSession = Depends(get_db))
     db.add(host)
     await db.commit()
     await db.refresh(host)
+    result = await db.execute(select(HostModel).options(selectinload(HostModel.tags)).where(HostModel.id == host.id))
+    host = result.scalar_one()
     logger.info(f"Host created: {host.hostname} ({host.ip_address})")
     return host
 
@@ -129,7 +131,8 @@ async def update_host(host_id: int, host_data: HostUpdate, db: AsyncSession = De
         setattr(host, key, value)
 
     await db.commit()
-    await db.refresh(host)
+    result = await db.execute(select(HostModel).options(selectinload(HostModel.tags)).where(HostModel.id == host_id))
+    host = result.scalar_one()
     logger.info(f"Host updated: {host.hostname} ({host.ip_address})")
     return host
 
