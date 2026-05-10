@@ -5,6 +5,7 @@
 import csv
 import io
 import re
+import logging
 from collections import defaultdict
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -28,6 +29,7 @@ from app.services.scanner import scan_all_hosts, scan_host
 from app.ssh.client import ssh_client
 
 router = APIRouter(prefix="/api", tags=["patches"])
+logger = logging.getLogger(__name__)
 
 
 @router.post("/scan")
@@ -99,14 +101,13 @@ async def trigger_patch_all(db: AsyncSession = Depends(get_db)):
                 "packages_updated": history.packages_updated,
             })
         except Exception as e:
-            # Sanitize: only expose first line, no traceback (CWE-209)
-            safe_msg = str(e).split('\n')[0][:200] if str(e) else "Unknown error"
+            logger.exception("Bulk patch failed for host_id=%s hostname=%s", host.id, host.hostname)
             results.append({
                 "host_id": host.id,
                 "hostname": host.hostname,
                 "status": "error",
                 "packages_updated": 0,
-                "error": safe_msg,
+                "error": "Patching failed due to an internal error",
             })
 
     # Re-scan all patched hosts so pending counts refresh immediately
