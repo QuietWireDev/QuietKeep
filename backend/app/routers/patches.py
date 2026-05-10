@@ -99,12 +99,14 @@ async def trigger_patch_all(db: AsyncSession = Depends(get_db)):
                 "packages_updated": history.packages_updated,
             })
         except Exception as e:
+            # Sanitize: only expose first line, no traceback (CWE-209)
+            safe_msg = str(e).split('\n')[0][:200] if str(e) else "Unknown error"
             results.append({
                 "host_id": host.id,
                 "hostname": host.hostname,
                 "status": "error",
                 "packages_updated": 0,
-                "error": str(e),
+                "error": safe_msg,
             })
 
     # Re-scan all patched hosts so pending counts refresh immediately
