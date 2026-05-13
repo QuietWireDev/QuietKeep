@@ -210,6 +210,12 @@ Copyright (C) 2026 QuietWire (Dennis Ayotte)
 
 ---
 
+## Support
+
+If you find this project useful, you can [buy me a coffee](https://buymeacoffee.com/quietwiredev).
+
+---
+
 <p align="center">
   <strong>Built by <a href="https://quietwire.dev">QuietWire</a></strong>
 </p>

@@ -897,6 +897,17 @@ export default function SettingsPage({ initialSection }: { initialSection?: stri
                   quietwire.dev
                 </a>
               </div>
+              <div className="border-t border-gray-800 pt-4 text-sm">
+                <span className="text-gray-400 font-medium">Support:</span>
+                <a
+                  href="https://buymeacoffee.com/quietwiredev"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block text-blue-400 hover:text-blue-300 transition-colors mt-1"
+                >
+                  buymeacoffee.com/quietwiredev
+                </a>
+              </div>
             </div>
           </section>
         )}
