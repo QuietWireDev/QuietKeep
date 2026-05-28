@@ -303,6 +303,12 @@ QuietKeep runs automatic scans on a schedule. Configure the interval in
 **Settings > Scan Interval**. The default is every 6 hours. You can also
 disable automatic scanning entirely.
 
+System scans and Docker scans run on separate schedules. The Docker scan
+always starts 30 minutes after the system scan on each cycle. This keeps
+the two jobs from opening SSH connections to every host at the same time.
+If you set both intervals to 1 hour, expect the system scan at the top of
+the hour and the Docker scan 30 minutes later.
+
 ---
 
 ## 11. Patching Hosts
@@ -443,7 +449,7 @@ The **Diagnostics** tab shows fleet-wide system health at a glance:
 | Kernel | `uname -r` |
 | Uptime | System uptime since last boot |
 | Disk Usage | `df -h /` (color-coded: green < 70%, amber 70-90%, red > 90%) |
-| Reboot Required | Checks for `/var/run/reboot-required` |
+| Reboot Required | Checks `/var/run/reboot-required` (Debian/Ubuntu/Kali); compares running kernel to highest installed `pve-kernel-*` package (Proxmox); compares running kernel to installed `linux` package (Arch) |
 | Sudoers | Whether QuietKeep has the permissions it needs |
 | Last Scan | Timestamp of the most recent scan |
 

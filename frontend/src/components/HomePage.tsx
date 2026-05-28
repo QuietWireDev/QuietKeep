@@ -5,7 +5,7 @@
 // Author: QuietWire (Dennis Ayotte)
 
 import { Monitor, Package, Container, ArrowRight, RefreshCw, Loader2, RotateCw, Scan, Wrench, RotateCcw, Box, Activity, Tags } from 'lucide-react';
-import { useDashboard, useDockerDashboard, useHosts, useTags, triggerScanAll, triggerDockerScanAll, isScanRunning, getActiveScanPromise, useActivity } from '../hooks/useApi';
+import { useDashboard, useDockerDashboard, useHosts, useTags, triggerScanAll, triggerDockerScanAll, isScanRunning, getActiveScanPromise, useActivity, useSettings } from '../hooks/useApi';
 import { formatUTC, formatUptime, timeAgo } from '../utils/formatDate';
 import { useState, useEffect } from 'react';
 import type { Host } from '../types';
@@ -122,6 +122,7 @@ export default function HomePage({ onNavigate }: Props) {
   const { hosts, refresh: refreshHosts } = useHosts();
   const { data: activityEvents, loading: activityLoading, refresh: refreshActivity } = useActivity(15);
   const { tags } = useTags();
+  const { settings } = useSettings();
   const [scanning, setScanning] = useState(() => isScanRunning());
 
   // If an auto-scan was triggered (e.g. from wizard), pick it up on mount
@@ -189,7 +190,10 @@ export default function HomePage({ onNavigate }: Props) {
 
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold tracking-tight">Overview</h2>
+        <div className="flex items-baseline gap-2">
+          <h2 className="text-2xl font-bold tracking-tight">Overview</h2>
+          <span className="text-xs text-gray-500 font-mono">{settings?.app_version ? `v${settings.app_version}` : ''}</span>
+        </div>
         <button
           onClick={handleScanAll}
           disabled={scanning}

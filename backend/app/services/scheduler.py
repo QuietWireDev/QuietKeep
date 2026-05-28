@@ -9,7 +9,6 @@ from datetime import datetime, timedelta
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from sqlalchemy import delete
 
-from app.config import settings
 from app.database import async_session
 from app.models import PatchHistoryModel
 from app.services.scanner import scan_all_hosts
@@ -75,23 +74,29 @@ def _docker_first_run(interval_hours: int) -> datetime:
     )
 
 
-def start_scheduler():
-    """Start the periodic scan scheduler."""
-    scheduler.add_job(
-        scheduled_scan,
-        "interval",
-        hours=settings.scan_interval_hours,
-        id="periodic_scan",
-        replace_existing=True,
-    )
-    scheduler.add_job(
-        scheduled_docker_scan,
-        "interval",
-        hours=settings.scan_interval_hours,
-        id="periodic_docker_scan",
-        replace_existing=True,
-        next_run_time=_docker_first_run(settings.scan_interval_hours),
-    )
+def start_scheduler(scan_hours: int = 6, docker_hours: int = 6, enabled: bool = True):
+    """Start the periodic scan scheduler.
+
+    Parameters come from the database at startup so saved settings survive
+    container restarts. Falls back to 6-hour defaults when no DB value exists.
+    Pass enabled=False to start with auto-scan off.
+    """
+    if enabled:
+        scheduler.add_job(
+            scheduled_scan,
+            "interval",
+            hours=scan_hours,
+            id="periodic_scan",
+            replace_existing=True,
+        )
+        scheduler.add_job(
+            scheduled_docker_scan,
+            "interval",
+            hours=docker_hours,
+            id="periodic_docker_scan",
+            replace_existing=True,
+            next_run_time=_docker_first_run(docker_hours),
+        )
     scheduler.add_job(
         cleanup_old_history,
         "interval",
@@ -100,11 +105,15 @@ def start_scheduler():
         replace_existing=True,
     )
     scheduler.start()
-    logger.info(
-        f"Scheduler started: scanning every {settings.scan_interval_hours} hours "
-        f"(Docker scan offset by {DOCKER_SCAN_OFFSET_MINUTES} min), "
-        f"history cleanup every 24h (retention: {HISTORY_RETENTION_DAYS} days)"
-    )
+    if enabled:
+        logger.info(
+            f"Scheduler started: system scan every {scan_hours}h, "
+            f"Docker scan every {docker_hours}h "
+            f"(Docker first run offset by {DOCKER_SCAN_OFFSET_MINUTES} min), "
+            f"history cleanup every 24h (retention: {HISTORY_RETENTION_DAYS} days)"
+        )
+    else:
+        logger.info("Scheduler started with auto-scan disabled. History cleanup every 24h.")
 
 
 def reschedule_jobs(scan_hours: int, docker_hours: int, enabled: bool):

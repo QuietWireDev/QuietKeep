@@ -188,6 +188,7 @@ export interface BulkPatchResult {
   hostname: string;
   status: string;
   packages_updated: number;
+  packages_held_back: number;
   error?: string;
 }
 

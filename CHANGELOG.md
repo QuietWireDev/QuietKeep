@@ -4,6 +4,19 @@ All notable changes to QuietKeep will be documented in this file.
 
 ---
 
+## [1.1.2] - 2026-05-28
+
+### Fixed
+- **Scan interval settings ignored after container restart (BUG-008)**. The scheduler always started at the 6-hour default on restart because `start_scheduler()` read the interval from `config.py` instead of the database. The startup lifespan now reads `scan_interval_hours`, `docker_scan_interval_hours`, and `auto_scan_enabled` from the database before starting the scheduler, so saved settings survive restarts.
+- **Patch All messaging and held-back packages (BUG-009)**. The bulk patch results banner now explains the `partial` status in plain text, shows an amber badge per host when packages were held back with a prompt to open the host and install them, and uses a clear message when a network error blocks the request. The `refreshHosts` and `refreshSummary` calls are now ordered so metric tiles reflect the post-scan state.
+- **Proxmox kernel updates not triggering reboot required (BUG-010)**. Proxmox VE kernel packages do not reliably write `/var/run/reboot-required`. The reboot check for `proxmox` hosts now falls back to comparing the running kernel (`uname -r`) against the highest installed kernel package. On PVE 8+, packages are named `proxmox-kernel-*-pve-signed`; the `-signed` suffix is stripped before comparison so the version string matches `uname -r` output correctly.
+- **Held-back install not logged in activity feed**. Clicking "Install Held-Back Updates" on a host ran the install and created a patch history entry but did not write a record to the Recent Activity feed. The `trigger_install_held_back` endpoint now calls `log_activity` after the install completes.
+
+### Added
+- **Version badge on Home page**. The app version is now shown in small text next to the "Overview" heading so the running version is visible without opening Settings.
+
+---
+
 ## [1.1.1] - 2026-05-10
 
 ### Fixed

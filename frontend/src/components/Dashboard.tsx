@@ -114,10 +114,10 @@ export default function Dashboard({ initialFilter, onFilterConsumed }: Dashboard
     try {
       const response = await triggerPatchAll();
       setPatchResults(response.results);
-      await refreshSummary();
       await refreshHosts();
+      await refreshSummary();
     } catch {
-      setPatchResults([{ host_id: 0, hostname: 'unknown', status: 'error', packages_updated: 0, error: 'Bulk patch request failed' }]);
+      setPatchResults([{ host_id: 0, hostname: 'unknown', status: 'error', packages_updated: 0, packages_held_back: 0, error: 'Network error during bulk patch. Check the activity log.' }]);
     } finally {
       setPatching(false);
     }
@@ -393,7 +393,7 @@ export default function Dashboard({ initialFilter, onFilterConsumed }: Dashboard
           </div>
           <div className="divide-y divide-gray-800/50">
             {patchResults.map((r) => (
-              <div key={r.host_id} className="flex items-center gap-3 px-5 py-2.5 text-sm">
+              <div key={r.host_id} className="flex items-center gap-3 px-5 py-2.5 text-sm flex-wrap">
                 {r.status === 'success' ? (
                   <CheckCircle className="h-4 w-4 text-emerald-400 shrink-0" />
                 ) : r.status === 'failed' || r.status === 'error' ? (
@@ -407,11 +407,16 @@ export default function Dashboard({ initialFilter, onFilterConsumed }: Dashboard
                     : r.status === 'failed' || r.status === 'error' ? 'bg-red-500/10 text-red-400'
                     : 'bg-amber-500/10 text-amber-400'
                 }`}>
-                  {r.status}
+                  {r.status === 'partial' ? 'partial (some installed, some failed)' : r.status}
                 </span>
                 <span className="text-xs text-gray-500">
                   {r.packages_updated} pkg{r.packages_updated !== 1 ? 's' : ''} updated
                 </span>
+                {r.packages_held_back > 0 && (
+                  <span className="text-xs px-2 py-0.5 rounded bg-amber-500/10 text-amber-400">
+                    {r.packages_held_back} held back - open host to install
+                  </span>
+                )}
                 {r.error && (
                   <span className="text-xs text-red-400/70 ml-auto truncate max-w-xs">{r.error}</span>
                 )}

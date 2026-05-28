@@ -4,6 +4,7 @@
 
 import csv
 import io
+import json
 import re
 import logging
 from collections import defaultdict
@@ -94,11 +95,14 @@ async def trigger_patch_all(db: AsyncSession = Depends(get_db)):
     for host in hosts:
         try:
             history = await patch_host(host, db)
+            held_back_raw = host.held_back_packages
+            held_back_count = len(json.loads(held_back_raw)) if held_back_raw else 0
             results.append({
                 "host_id": host.id,
                 "hostname": host.hostname,
                 "status": history.status,
                 "packages_updated": history.packages_updated,
+                "packages_held_back": held_back_count,
             })
         except Exception as e:
             logger.exception("Bulk patch failed for host_id=%s hostname=%s", host.id, host.hostname)
@@ -107,6 +111,7 @@ async def trigger_patch_all(db: AsyncSession = Depends(get_db)):
                 "hostname": host.hostname,
                 "status": "error",
                 "packages_updated": 0,
+                "packages_held_back": 0,
                 "error": "Patching failed due to an internal error",
             })
 
@@ -167,6 +172,7 @@ async def trigger_install_held_back(host_id: int, db: AsyncSession = Depends(get
             detail=f"Install-held-back does not apply to os_type={host.os_type}",
         )
     history = await patch_host(host, db, include_new_pkgs=True)
+    await log_activity(db, 'patch', f'Held-back install on {host.hostname}: {history.status}, {history.packages_updated} pkgs', host_id=host.id, hostname=host.hostname)
     return {
         "message": f"Held-back install complete for {host.hostname}",
         "status": history.status,

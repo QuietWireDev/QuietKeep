@@ -190,6 +190,10 @@ const sections: { title: string; items: FAQItem[] }[] = [
         a: 'Green means under 70% used, amber means 70-90%, and red means over 90%. Disk usage is collected during each scan. High disk usage can cause patch and Docker update failures, so keep an eye on red hosts.',
       },
       {
+        q: 'Why does the Docker scan run later than the system scan?',
+        a: 'Docker scans are intentionally delayed 30 minutes after the system scan on each cycle. Both jobs connect to every host over SSH, so running them at the same time would open a lot of connections at once. The offset keeps the workloads staggered. If you set both intervals to 1 hour, expect the system scan at the top of the hour and the Docker scan 30 minutes later.',
+      },
+      {
         q: 'Can I get notified when updates are available?',
         a: 'Not yet. Email and webhook notifications are planned for a future release. For now, check the dashboard or let the scheduled scans keep things current.',
       },

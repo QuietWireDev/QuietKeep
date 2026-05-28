@@ -125,9 +125,27 @@ class SSHClient:
 
     async def check_reboot_required_on(self, conn: "SSHClient._Connection", os_type: str) -> bool:
         """Check reboot status on an open connection."""
-        if os_type in ("apt", "proxmox", "kali"):
+        if os_type in ("apt", "kali"):
             success, stdout, _ = await conn.run(
                 "[ -f /var/run/reboot-required ] && echo REBOOT_NEEDED || echo OK",
+                timeout=10,
+            )
+            return success and "REBOOT_NEEDED" in stdout
+        elif os_type == "proxmox":
+            # PVE kernels do not reliably write /var/run/reboot-required.
+            # Check both pve-kernel-* (older PVE) and proxmox-kernel-*-pve
+            # (PVE 8+) actual kernel packages. Meta-packages like
+            # proxmox-kernel-7.0 are excluded by the -pve suffix filter.
+            # Stripping everything up to and including -kernel- gives a
+            # version string (e.g. 7.0.2-7-pve) comparable to uname -r.
+            success, stdout, _ = await conn.run(
+                "[ -f /var/run/reboot-required ] && echo REBOOT_NEEDED || "
+                "(RUNNING=$(uname -r); "
+                "NEWEST=$(dpkg -l 2>/dev/null | "
+                "awk '/^ii/ && ($2 ~ /^pve-kernel-[0-9]/ || $2 ~ /^proxmox-kernel-[0-9].*-pve/) {print $2}' | "
+                "sed 's/.*-kernel-//;s/-signed$//' | sort -V | tail -1); "
+                "if [ -n \"$NEWEST\" ] && [ \"$NEWEST\" != \"$RUNNING\" ]; "
+                "then echo REBOOT_NEEDED; else echo OK; fi)",
                 timeout=10,
             )
             return success and "REBOOT_NEEDED" in stdout
@@ -141,10 +159,23 @@ class SSHClient:
 
     async def check_reboot_required(self, host: str, username: str, os_type: str) -> bool:
         """Check if a host needs a reboot after updates."""
-        if os_type in ("apt", "proxmox", "kali"):
+        if os_type in ("apt", "kali"):
             success, stdout, _ = await self.run_command(
                 host, username,
                 "[ -f /var/run/reboot-required ] && echo REBOOT_NEEDED || echo OK",
+                timeout=10,
+            )
+            return success and "REBOOT_NEEDED" in stdout
+        elif os_type == "proxmox":
+            success, stdout, _ = await self.run_command(
+                host, username,
+                "[ -f /var/run/reboot-required ] && echo REBOOT_NEEDED || "
+                "(RUNNING=$(uname -r); "
+                "NEWEST=$(dpkg -l 2>/dev/null | "
+                "awk '/^ii/ && ($2 ~ /^pve-kernel-[0-9]/ || $2 ~ /^proxmox-kernel-[0-9].*-pve/) {print $2}' | "
+                "sed 's/.*-kernel-//;s/-signed$//' | sort -V | tail -1); "
+                "if [ -n \"$NEWEST\" ] && [ \"$NEWEST\" != \"$RUNNING\" ]; "
+                "then echo REBOOT_NEEDED; else echo OK; fi)",
                 timeout=10,
             )
             return success and "REBOOT_NEEDED" in stdout

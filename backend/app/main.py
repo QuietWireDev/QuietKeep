@@ -13,7 +13,7 @@ from sqlalchemy import select
 from app.auth import get_current_user
 from app.config import settings as app_settings
 from app.database import async_session, init_db
-from app.models import HostModel
+from app.models import AppSettingModel, HostModel
 from app.routers import activity, auth, dashboard, docker, hosts, patches, settings as settings_router, tags, threat_intel
 from app.services.scheduler import start_scheduler, stop_scheduler
 
@@ -35,13 +35,37 @@ async def check_hosts():
             logger.info("No hosts configured. Add hosts via the web UI or CSV import")
 
 
+SCHEDULER_DEFAULTS = {
+    "scan_interval_hours": 6,
+    "docker_scan_interval_hours": 6,
+    "auto_scan_enabled": True,
+}
+
+
+async def _load_scheduler_settings() -> dict:
+    """Read saved scan intervals and auto-scan flag from the database.
+
+    Falls back to defaults when keys are missing (first run or no DB value).
+    """
+    async with async_session() as db:
+        result = await db.execute(select(AppSettingModel))
+        rows = {r.key: r.value for r in result.scalars().all()}
+
+    scan_hours = int(rows.get("scan_interval_hours", SCHEDULER_DEFAULTS["scan_interval_hours"]))
+    docker_hours = int(rows.get("docker_scan_interval_hours", SCHEDULER_DEFAULTS["docker_scan_interval_hours"]))
+    raw_enabled = rows.get("auto_scan_enabled", "true")
+    enabled = raw_enabled.lower() in ("true", "1", "yes")
+    return {"scan_hours": scan_hours, "docker_hours": docker_hours, "enabled": enabled}
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup
     logger.info(f"Starting {app_settings.app_name}...")
     await init_db()
     await check_hosts()
-    start_scheduler()
+    sched_cfg = await _load_scheduler_settings()
+    start_scheduler(**sched_cfg)
     yield
     # Shutdown
     stop_scheduler()
