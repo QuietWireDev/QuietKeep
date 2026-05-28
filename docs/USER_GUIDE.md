@@ -55,7 +55,7 @@ users who may be new to Docker, SSH, or Linux server administration.
 Clone the repository and build with Docker Compose:
 
 ```bash
-git clone https://github.com/quietwire-dev/QuietKeep.git ~/quietkeep
+git clone https://github.com/QuietWireDev/QuietKeep.git ~/quietkeep
 cd ~/quietkeep
 docker compose up -d --build
 ```
@@ -686,8 +686,8 @@ Common causes:
 
 ## Getting Help
 
-- **Report a bug:** [GitHub Issue (Bug Report)](https://github.com/quietwire-dev/QuietKeep/issues/new?template=bug_report.md)
-- **Request a feature:** [GitHub Issue (Feature Request)](https://github.com/quietwire-dev/QuietKeep/issues/new?template=feature_request.md)
+- **Report a bug:** [GitHub Issue (Bug Report)](https://github.com/QuietWireDev/QuietKeep/issues/new?template=bug_report.md)
+- **Request a feature:** [GitHub Issue (Feature Request)](https://github.com/QuietWireDev/QuietKeep/issues/new?template=feature_request.md)
 - **In-app help:** Click the gear icon > **Help & FAQ** for searchable answers to common questions
 
 ---

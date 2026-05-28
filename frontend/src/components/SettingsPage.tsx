@@ -873,7 +873,7 @@ export default function SettingsPage({ initialSection }: { initialSection?: stri
               </div>
               <div className="border-t border-gray-800 pt-4 space-y-2 text-sm">
                 <a
-                  href="https://github.com/quietwire-dev/QuietKeep/blob/main/docs/USER_GUIDE.md"
+                  href="https://github.com/QuietWireDev/QuietKeep/blob/main/docs/USER_GUIDE.md"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="block text-blue-400 hover:text-blue-300 transition-colors"
@@ -881,7 +881,7 @@ export default function SettingsPage({ initialSection }: { initialSection?: stri
                   User Guide
                 </a>
                 <a
-                  href="https://github.com/quietwire-dev/quietkeep"
+                  href="https://github.com/QuietWireDev/QuietKeep"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="block text-blue-400 hover:text-blue-300 transition-colors"
@@ -895,17 +895,6 @@ export default function SettingsPage({ initialSection }: { initialSection?: stri
                   className="block text-blue-400 hover:text-blue-300 transition-colors"
                 >
                   quietwire.dev
-                </a>
-              </div>
-              <div className="border-t border-gray-800 pt-4 text-sm">
-                <span className="text-gray-400 font-medium">Support:</span>
-                <a
-                  href="https://buymeacoffee.com/quietwiredev"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="block text-blue-400 hover:text-blue-300 transition-colors mt-1"
-                >
-                  buymeacoffee.com/quietwiredev
                 </a>
               </div>
             </div>

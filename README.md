@@ -175,7 +175,7 @@ All core features are functional and tested on an 18-host fleet.
 ## Getting Started
 
 ```bash
-git clone https://github.com/quietwire-dev/QuietKeep.git ~/quietkeep
+git clone https://github.com/QuietWireDev/QuietKeep.git ~/quietkeep
 cd ~/quietkeep
 docker compose up -d --build
 ```
@@ -198,7 +198,7 @@ git pull
 docker compose up -d --build
 ```
 
-Your data, settings, SSH keys, and certificates are stored in named Docker volumes and are not affected by rebuilds. Check the [Releases](https://github.com/quietwire-dev/QuietKeep/releases) page or [CHANGELOG](CHANGELOG.md) for what changed in each version.
+Your data, settings, SSH keys, and certificates are stored in named Docker volumes and are not affected by rebuilds. Check the [Releases](https://github.com/QuietWireDev/QuietKeep/releases) page or [CHANGELOG](CHANGELOG.md) for what changed in each version.
 
 ---
 
@@ -207,12 +207,6 @@ Your data, settings, SSH keys, and certificates are stored in named Docker volum
 QuietKeep is open source software licensed under the [GNU Affero General Public License v3.0](LICENSE).
 
 Copyright (C) 2026 QuietWire (Dennis Ayotte)
-
----
-
-## Support
-
-If you find this project useful, you can [buy me a coffee](https://buymeacoffee.com/quietwiredev).
 
 ---
 

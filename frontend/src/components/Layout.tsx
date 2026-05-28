@@ -76,7 +76,7 @@ export default function Layout({ children, activeTab, onTabChange, onLogout, bui
             <div className="flex items-center gap-2">
             {/* GitHub CTA */}
             <a
-              href="https://github.com/quietwire-dev/quietkeep"
+              href="https://github.com/QuietWireDev/QuietKeep"
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-sm font-medium transition-colors"
@@ -122,7 +122,7 @@ export default function Layout({ children, activeTab, onTabChange, onLogout, bui
                   </button>
                   <div className="border-t border-gray-800 my-1" />
                   <a
-                    href="https://github.com/quietwire-dev/quietkeep/issues/new?template=bug_report.md"
+                    href="https://github.com/QuietWireDev/QuietKeep/issues/new?template=bug_report.md"
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={() => setMenuOpen(false)}
@@ -132,7 +132,7 @@ export default function Layout({ children, activeTab, onTabChange, onLogout, bui
                     Report Bug
                   </a>
                   <a
-                    href="https://github.com/quietwire-dev/quietkeep/issues/new?template=feature_request.md"
+                    href="https://github.com/QuietWireDev/QuietKeep/issues/new?template=feature_request.md"
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={() => setMenuOpen(false)}

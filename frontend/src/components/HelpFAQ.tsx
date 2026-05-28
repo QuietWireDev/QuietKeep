@@ -355,7 +355,7 @@ export default function HelpFAQ() {
           Full walkthrough from installation to daily use, including SSH setup, host management, patching, Docker updates, tags, and troubleshooting.
         </p>
         <a
-          href="https://github.com/quietwire-dev/QuietKeep/blob/main/docs/USER_GUIDE.md"
+          href="https://github.com/QuietWireDev/QuietKeep/blob/main/docs/USER_GUIDE.md"
           target="_blank"
           rel="noopener noreferrer"
           className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600/20 text-blue-400 hover:bg-blue-600/30 transition-colors text-sm font-medium"
@@ -376,7 +376,7 @@ export default function HelpFAQ() {
             Found something that doesn't work as expected? Let us know so we can fix it.
           </p>
           <a
-            href="https://github.com/quietwire-dev/quietkeep/issues/new?template=bug_report.md"
+            href="https://github.com/QuietWireDev/QuietKeep/issues/new?template=bug_report.md"
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-red-600/20 text-red-400 hover:bg-red-600/30 transition-colors text-sm font-medium"
@@ -394,7 +394,7 @@ export default function HelpFAQ() {
             Have an idea for a new feature or improvement? We'd love to hear it.
           </p>
           <a
-            href="https://github.com/quietwire-dev/quietkeep/issues/new?template=feature_request.md"
+            href="https://github.com/QuietWireDev/QuietKeep/issues/new?template=feature_request.md"
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-amber-600/20 text-amber-400 hover:bg-amber-600/30 transition-colors text-sm font-medium"

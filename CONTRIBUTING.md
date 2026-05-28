@@ -16,7 +16,7 @@ QuietKeep runs as a single Docker container. For local development:
 
 ```bash
 # Clone the repo
-git clone https://github.com/quietwire-dev/QuietKeep.git
+git clone https://github.com/QuietWireDev/QuietKeep.git
 cd QuietKeep
 
 # Build and run with Docker Compose
@@ -81,11 +81,11 @@ deploy/           Docker and deployment files
 
 ## Reporting Bugs
 
-Use the [Bug Report](https://github.com/quietwire-dev/QuietKeep/issues/new?template=bug_report.md) template.
+Use the [Bug Report](https://github.com/QuietWireDev/QuietKeep/issues/new?template=bug_report.md) template.
 
 ## Requesting Features
 
-Use the [Feature Request](https://github.com/quietwire-dev/QuietKeep/issues/new?template=feature_request.md) template.
+Use the [Feature Request](https://github.com/QuietWireDev/QuietKeep/issues/new?template=feature_request.md) template.
 
 ## Security Issues
 
