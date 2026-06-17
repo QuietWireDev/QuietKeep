@@ -4,6 +4,12 @@ services:
       context: .
       dockerfile: Dockerfile
     restart: unless-stopped
+    # environment:
+      # Override the auto-detected server IP (e.g. behind a load balancer):
+      # - QUIETKEEP_HOST=quietkeep.example.com
+      # Inject the JWT signing secret from a secret manager instead of
+      # letting QuietKeep persist one to the data volume (optional):
+      # - QUIETKEEP_JWT_SECRET=replace-with-a-long-random-value
     ports:
       - "80:8080"
       - "443:8443"

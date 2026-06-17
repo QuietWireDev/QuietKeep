@@ -36,7 +36,19 @@ _SECRET_PATH = Path(os.environ.get("QUIETKEEP_DATA_DIR", "/app/data")) / ".jwt_s
 
 
 def _get_secret_key() -> str:
-    """Load or generate the JWT signing secret."""
+    """Load or generate the JWT signing secret.
+
+    Resolution order:
+    1. QUIETKEEP_JWT_SECRET environment variable, if set. This lets an
+       operator inject the secret from an external secret manager and
+       keep it off disk entirely.
+    2. A previously persisted secret file.
+    3. A freshly generated secret, written to a 0600 file inside the data
+       volume so sessions survive container restarts.
+    """
+    env_secret = os.environ.get("QUIETKEEP_JWT_SECRET")
+    if env_secret:
+        return env_secret.strip()
     if _SECRET_PATH.exists():
         return _SECRET_PATH.read_text().strip()
     secret = secrets.token_urlsafe(64)

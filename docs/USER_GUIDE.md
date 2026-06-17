@@ -72,6 +72,16 @@ The server IP is auto-detected at startup. If you need to override it
 (for example, behind a load balancer), set the `QUIETKEEP_HOST` environment
 variable in your `docker-compose.yml`.
 
+### Optional: supply the JWT signing secret yourself
+
+By default QuietKeep generates a JWT signing secret on first startup and
+stores it in a `0600`-permission file inside the data volume so login
+sessions survive restarts. If you would rather inject the secret from an
+external secret manager and keep it off disk, set the
+`QUIETKEEP_JWT_SECRET` environment variable. When set, it takes precedence
+and no secret file is written. Use a long random value, for example
+`openssl rand -base64 48`.
+
 ---
 
 ## 3. Access the Web UI

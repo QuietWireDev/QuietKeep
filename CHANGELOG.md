@@ -4,6 +4,13 @@ All notable changes to QuietKeep will be documented in this file.
 
 ---
 
+## [1.1.5] - 2026-06-17
+
+### Security
+- **JWT signing secret can now be injected via the `QUIETKEEP_JWT_SECRET` environment variable.** When set, it takes precedence and no secret file is written, letting operators keep the secret off disk and source it from an external secret manager. Behaviour is unchanged when unset: a secret is generated and persisted to a `0600` file in the data volume so sessions survive restarts. Hardening prompted by a CodeQL clear-text-storage finding (triaged as accepted risk for the default self-hosted, single-user threat model).
+
+---
+
 ## [1.1.4] - 2026-06-17
 
 ### Security
