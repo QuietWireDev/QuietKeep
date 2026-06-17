@@ -4,6 +4,19 @@ All notable changes to QuietKeep will be documented in this file.
 
 ---
 
+## [1.1.3] - 2026-06-17
+
+### Security
+- **python-multipart bumped 0.0.27 to 0.0.30**. Clears four advisories: quadratic-time querystring parsing with semicolon separators (CPU DoS, CVE-2026-53539), negative Content-Length buffering the entire body in memory, semicolon treated as a querystring field separator enabling parameter smuggling (CVE-2026-53538), and Content-Disposition parameter smuggling via RFC 2231/5987 extended parameters.
+- **vite bumped to 8.0.16**. Fixes `server.fs.deny` bypass on Windows alternate paths (CVE-2026-53571) and the bundled launch-editor NTLMv2 hash disclosure via UNC path handling on Windows.
+- **js-yaml bumped to 4.2.0** (dev dependency, via eslint). Fixes quadratic-complexity DoS in merge key handling via repeated aliases (CVE-2026-53550).
+- **@babel/core bumped to 7.29.7** (dev dependency, via eslint-plugin-react-hooks). Fixes arbitrary file read via sourceMappingURL comment (CVE-2026-49356).
+- **brace-expansion bumped** (dev dependency, via @typescript-eslint). Fixes a DoS where a large numeric range defeats the documented `max` protection.
+
+All frontend changes are lockfile-only updates. `npm audit` reports zero vulnerabilities and the production build is unchanged.
+
+---
+
 ## [1.1.2] - 2026-05-28
 
 ### Fixed

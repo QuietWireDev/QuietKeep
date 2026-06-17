@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://img.shields.io/badge/version-1.1.2-brightgreen" alt="Version: 1.1.2" />
+  <img src="https://img.shields.io/badge/version-1.1.3-brightgreen" alt="Version: 1.1.3" />
   <img src="https://img.shields.io/badge/license-AGPL--3.0-green" alt="License: AGPL-3.0" />
   <img src="https://img.shields.io/badge/python-3.12-blue" alt="Python 3.12" />
   <img src="https://img.shields.io/badge/react-19-61dafb" alt="React 19" />
