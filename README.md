@@ -60,11 +60,11 @@ QuietKeep is a self-hosted web application that lets you manage system updates a
 
 ```
   QuietKeep Server                 Managed Hosts
-┌──────────────────┐          ┌─────────────────────┐
-│  FastAPI Backend │── SSH ──▶│  apt / pacman       │
-│  React Frontend  │          │  docker compose     │
-│  SQLite DB       │          │  No agents needed   │
-└──────────────────┘          └─────────────────────┘
+┌──────────────────┐           ┌────────────────────┐
+│  FastAPI Backend │── SSH ──▶│  apt / pacman      │
+│  React Frontend  │           │  docker compose    │
+│  SQLite DB       │           │  No agents needed  │
+└──────────────────┘           └────────────────────┘
 ```
 
 QuietKeep connects to your hosts over SSH using key-based authentication. It runs standard system commands (`apt`, `pacman`, `docker compose`). Nothing is installed on the managed hosts.
